@@ -1,0 +1,22 @@
+<launch>
+  <!-- Location of the ballvision color file -->
+  <param name="ballvision/color_file" type="string" 
+         value="/home/student/cs1567/src/mypackage/scripts/ball.txt" />
+
+  <!-- Turn debug output on or off -->
+  <param name="ballvision/debug_on" type="bool" value="true"/>
+
+  <!-- Turn color calibration on or off -->
+  <param name="ballvision/color_cal_on" type="bool" value="false"/>
+
+  <!-- Enable Mean shift filtering -->
+  <param name="ballvision/mean_shift_on" type="bool" value="false"/>
+
+  <!-- Spatial bandwidth: Bigger = smoother image -->
+  <param name="ballvision/spatial_radius_pix" type="double" value="2.0"/>
+
+  <!-- Color bandwidth: Bigger = smoother image-->
+  <param name="ballvision/color_radius_pix" type="double" value="40.0"/>
+
+  <node name="ballvision" pkg="ballvision" type="ballvision" args="image:=/v4l/camera/image_raw" output="screen" />
+</launch>
