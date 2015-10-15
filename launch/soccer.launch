@@ -8,7 +8,9 @@
 		<!-- command: roslaunch kobuki_node minimal.launch -->
 		<include file ="$(find kobuki_node)/launch/minimal.launch"/>
 		
-		<!-- command: rosrun mypackage constant_command.py -->
-		<node name="constant_command" pkg="mypackage" type="constant_command.py"/>
-		<!-- node name="soccer_player" pkg="mypackage" type="play_the_game.py"/-->
+		<!-- command: rosrun mypackage soccer/constant_command.py -->
+		<node name="constant_command" pkg="mypackage" type="soccer/constant_command.py"/>
+	
+		<!-- command: rosrun mypackage soccer/play_the_game.py
+		<node name="soccer_player" pkg="mypackage" type="soccer/play_the_game.py"/>
 </launch>
