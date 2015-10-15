@@ -10,5 +10,5 @@
 		
 		<!-- command: rosrun mypackage constant_command.py -->
 		<node name="constant_command" pkg="mypackage" type="constant_command.py"/>
-		<!-- node name="blob_tracker" pkg="mypackage" type="stlinetrack.py"/-->
+		<node name="blob_tracker" pkg="mypackage" type="stlinetrack.py"/>
 </launch>
