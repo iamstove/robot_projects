@@ -20,43 +20,20 @@ def blobsCallback(data): #this is called whenever a blob message is posted, blob
 	# bloblist = []
 	if data.blob_count > 0: #we have a blob, track it
 		for box in data.blobs:
-			if box.bottom > 240:
-				newarea = (box.right - box.left) * (box.bottom - max(240, box.top))
-				area = area + newarea
-				y = y + ((max(240, box.top) + box.bottom) / 2 * newarea)
-				x = x + box.x * newarea
+			area += box.area
+			y += box.y * box.area
+			x += box.x * box.area
 		x = x / area
 		y = y / area
-		'''index = len(bloblist)
-		bloblist.append(box)
-		while index > 0 and bloblist[(index-1)/2].area < bloblist[index].area:
-		bloblist[(index-1)/2], bloblist[index] = bloblist[index], bloblist[(index-1)/2]
-		index = (index-1)/2'''
-			
-			
-		# bigblob = bloblist[0]
-		#nearlist = findBlobsInArea(bigblob, bloblist)
-		#area = area + box.area
-		#x = x + (box.x * box.area)
-		#y = y + (box.y * box.area)
-		#print(bigblob.area)
-		#blobloc = bigblob.x - 320 #this is how we know which way to move the robot, negative to the left, pos to the right
+		
 		blobloc = (320.0 - x)/320.0
-		#print(blobloc)
+		
 		curr_velocity.angular.z = K_P * blobloc + K_D * (blobloc - pastloc)
-		curr_velocity.linear.x = .2
 		pastloc = blobloc
 		pub.publish(curr_velocity)
 	else: #stay still
 		twist_init()
 		pub.publish(curr_velocity)
-		
-'''def nearBlobOverlap(blob, bloblist):
-	feather = 5
-	nearlist = []'''
-	#for box in bloblist:
-	#	if box.left - blob.right < feather and box.left - blob.right > feather:
-			
 
 def twist_init():
 	global curr_velocity
