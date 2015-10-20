@@ -12,7 +12,7 @@ pub = rospy.Publisher('kobuki_command', Twist, queue_size=10) # Command publishe
 K_P = 1.5 # K_p in the PID equation
 K_D = 1.25 # K_d in the PID equation
 
-color_namelist = ['Greenline', 'Redball,' 'Orangegoal'] # We'll use this for indexing different colors.
+color_namelist = ['Greenline', 'Redball', 'Orangegoal'] # We'll use this for indexing different colors.
 
 def blobsCallback(data): # This is called whenever a blobs message is posted; this happens constnatly even if blobs are not detected
 	global curr_blobweights 
@@ -96,7 +96,7 @@ def follow_the_line():
 		# Now we have_new_blobinfo, so let's process.
 
 		blobloc = curr_blobweights[0][0] # 0 is x, and then 0 is, in the color list, the index for Greenline
-		if blobloc != -1: # If it hasn't been sentinenlized
+		if blobloc != -1: # If it hasn't been sentinelized
 			curr_velocity.angular.z = K_P * blobloc + K_D * (blobloc - pastloc)
 			#print(curr_velocity.angular.z)
 			curr_velocity.linear.x = .2
@@ -118,7 +118,51 @@ def follow_the_line():
 	# Now we're done with the line, so we need to look for the ball	
 
 def play_ball():
-		
+	SEARCH_NONE, SEARCH_BALL, SEARCH_GOAL # Supposed to be a state thing, complete this line
+	
+	# We first want to declare our dependency upon the global blob area.
+	global curr_blobweights # Note well that this is effectively all blobsCallback changes when it runs.
+	# We will simulate nodelike behavior by looping until a flag has_new_blobinfo is set.
+	global has_new_blobinfo
+	
+	### NEEDS: TURN -PI/2 RAD ###
+
+	### THEN, WE SEARCH ###
+	
+	not_done_with_search = True # We begin our search now, in fact
+
+	hope = 0 # The amount of hope we have at this point in time that we're seeing the ball
+	
+	time_waited = 0 # We don't have to wait at all to try the first time.
+	time_last = time.clock() # Start the time so we know when we started later.
+	
+	while not_done_with_search:
+		while not(has_new_blobinfo):
+			rospy.sleep(time_waited / 10) # Sleep for a bit.  Maybe?
+		time_waited = time.clock() - time_last # Get the difference now
+		time_last = time.clock() # Reset the time
+		# Now we have_new_blobinfo, so let's process.
+
+		ballloc = curr_blobweights[0][1] # 0 is x, and then 1 is, in the color list, the index for Redball
+		goalloc = curr_blobweights[0][2] # yada yada 2 is Orangegoal
+
+		if searchobj == SEARCH_NONE:
+		if ballloc == -1 and goalloc == -1: # If it HAS been sentinelized
+			curr_velocity.angular.z = 0.2
+			pub.publish(curr_velocity)
+		elif ballloc != -1: # Else if we do see the ball
+			### TURN TO THE BALL.  SET A STATE VALUE SO THAT WE FOLLOW THE BALL ON SUCCESSIVE LOOPS ###
+			hope -= 1
+			if hope < -20:
+				not_done_with_line = False # We're not NOT done with it ...
+			elif hope < 0:
+				#print("Staying!!")
+				twist_init()
+				pub.publish(curr_velocity)
+			else:
+				# We've still got hope!!!
+	
+	# Now we're done with the line, so we need to look for the ball	
 
 def play_game():
 	init_all() # Initialize everything (includes initialization of the twist for current motion)
