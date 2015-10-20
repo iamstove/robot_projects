@@ -18,7 +18,7 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 	global curr_blobweights 
 	global has_new_blobinfo
 	x = [0, 0, 0] # Greenline, Redball, Orangegoal
-	y = [0, 0, 0]
+	y = [0, 0, 0] # could be generalized but is ok for now
 	area = [-1, -1, -1]
 	if data.blob_count > 0: # We have a blob / some blobs, track them
 		for box in data.blobs:
@@ -34,10 +34,12 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 				# Unidentified or irrelevant color.  Ignore it / do nothing.
 
 		for color_index in range(color_name.length()): # Divide by the total weight to find the center position
-			x[color_index] /= area[color_index]
-			y[color_index] /= area[color_index]
+			if area[color_index] == -1:
+			else:
+				x[color_index] /= area[color_index]
+				y[color_index] /= area[color_index]
 			
-		curr_blobweights = area # Boom.
+		curr_blobweights = [x, y] # Boom.
 		has_new_blobinfo = True
 
 
@@ -78,31 +80,45 @@ def follow_the_line():
 	# We will have a trigger that will mean we're finished with the line; this trigger requires we have not seen
 	### a green blob for 10 new sets of blobs.  This trigger activates with changes in not_done_with_line
 	not_done_with_line = True
-
+	
+	hope = 0 # The amount of hope we have at this point in time that we're on the line
+	
 	# The loop will incorporate a wait that waits 1/10 the time we waited to get the blob the last time.
 	### This is so the program doesn't consume huge CPU.
-	last_time_waited = 0 # We don't have to wait at all to try the first time.
+	time_waited = 0 # We don't have to wait at all to try the first time.
+	time_last = time.clock() # Start the time so we know when we started later.
 	
 	while not_done_with_line:
 		while not(has_new_blobinfo):
-			rospy.sleep(last_time_waited / 10) # Sleep for a bit.  Maybe?
+			rospy.sleep(time_waited / 10) # Sleep for a bit.  Maybe?
+		time_waited = time.clock() - time_last # Get the difference now
+		time_last = time.clock() # Reset the time
 		# Now we have_new_blobinfo, so let's process.
-		if curr_blobweights[0] 
+
+		blobloc = curr_blobweights[0][0] # 0 is x, and then 0 is, in the color list, the index for Greenline
+		if blobloc != -1: # If it hasn't been sentinenlized
 			curr_velocity.angular.z = K_P * blobloc + K_D * (blobloc - pastloc)
 			#print(curr_velocity.angular.z)
 			curr_velocity.linear.x = .2
 			pastloc = blobloc
 			#print("going!!")
 			pub.publish(curr_velocity)
-		else: #stay still
-			#print("Staying!!")
-			twist_init()
-			pub.publish(curr_velocity)
-		
-		
+			hope = 10 # We're hopeful that we'll continue to see the line 
+		else: # decide whether to stay still or keep up hope
+			hope -= 1
+			if hope < -20:
+				not_done_with_line = False # We're not NOT done with it ...
+			elif hope < 0:
+				#print("Staying!!")
+				twist_init()
+				pub.publish(curr_velocity)
+			else:
+				# We've still got hope!!!
 	
-	# When we do have new_blobinfo we will 
-	
+	# Now we're done with the line, so we need to look for the ball	
+
+def play_ball():
+		
 
 def play_game():
 	init_all() # Initialize everything (includes initialization of the twist for current motion)
@@ -110,6 +126,7 @@ def play_game():
 	rospy.Subscriber('/blobs', Blobs, blobsCallback)
 	
 	follow_the_line()
+	play_ball()
 	
 	rospy.spin()
 
