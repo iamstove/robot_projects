@@ -116,7 +116,6 @@ def play_game():
 	resetter()
 	turn_and_find()
 	sys.stderr.write("End of the line\nPlaying ball\n")
-	play_ball()
 
 	fd.close()
 
