@@ -116,24 +116,23 @@ def follow_the_line():
 			rospy.sleep(max(time_waited / 10, SLEEP_TIME / 10)) # Sleep for a bit.  Maybe?
 		time_waited = time.clock() - time_last # Get the difference now
 		time_last = time.clock() # Reset the time
-		has_new_blobinfo = False	
+		has_new_blobinfo = False
 		# Now we have_new_blobinfo, so let's process.
-	
+
 		blobloc = curr_blobweights[0][0] # 0 is x, and then 0 is, in the color list, the index for Greenline
 		if blobloc != -1: # If it hasn't been sentinelized
 			blobloc = (320.0 - blobloc) / 320.0
 			curr_velocity.angular.z = K_P * blobloc + K_D * (blobloc - pastloc)
 			#print(curr_velocity.angular.z)
-			curr_velocity.linear.x = hope / 500.0
+			curr_velocity.linear.x = 0.2
 			pastloc = blobloc
 			#print("going!!")
 			pub.publish(curr_velocity)
 			hope = 100 # We're hopeful that we'll continue to see the line
 		else: # decide whether to stay still or keep up hope
 			hope -= 1
-			if hope < -50:
+			if hope < 0:
 				not_done_with_line = False # We're not NOT done with it ...
-			elif hope < 0:
 				#print("Staying!!")
 				twist_init()
 				pub.publish(curr_velocity)
@@ -147,13 +146,13 @@ def play_ball():
 	global curr_blobweights # Note well that this is effectively all blobsCallback changes when it runs.
 	# We will simulate nodelike behavior by looping until a flag has_new_blobinfo is set.
 	global has_new_blobinfo
-	
+
 	global del_x
 	global del_r
 
 	### NEEDS: TURN -PI/2 RAD ###
-	move_and_wait("L", 0.5, 90)		
-	
+	move_and_wait("L", 0.5, 90)
+
 	### THEN, WE SEARCH ###
 
 	not_done_with_search = True # We begin our search now, in fact
@@ -173,13 +172,13 @@ def play_ball():
 		lock_on(itemFound[1])
 		pos1Dict[itemsFound[1]] = del_r[2]
 
-		
+
 def lock_on(item_found):
 	global curr_blobweights
 	global has_new_blobinfo
 	global del_x
 	global del_r
-	
+
 	if "ball" == item_found:
 		itemindex = 1
 	elif "goal" == item_found:
@@ -187,16 +186,16 @@ def lock_on(item_found):
 	else:
 		return # ruh roh
 
-	count = 0	
+	count = 0
 	hope = 0
-	
+
 	while count < 1000:
 		while not(has_new_blobinfo):
 			rospy.sleep(SLEEP_TIME / 10) # Sleep for a bit.  Maybe?
 		# Now we have_new_blobinfo, so let's process.
-		
+
 		blobloc = curr_blobweights[0][itemindex]
-	
+
 		if blobloc != -1: # If it hasn't been sentinelized
 			blobloc = (320.0 - blobloc) / 320.0
 			curr_velocity.angular.z = K_P * blobloc
@@ -215,17 +214,17 @@ def lock_on(item_found):
 def scan(itemsFound):
 	global curr_blobweights
 	global has_new_blobinfo
-	
+
 	count = 0
-	
+
 	while count < 1000:
 		while not(has_new_blobinfo):
 			rospy.sleep(SLEEP_TIME / 10) # Sleep for a bit.  Maybe?
 		# Now we have_new_blobinfo, so let's process.
-		
+
 		ballloc = curr_blobweights[0][1] # 0 is x, and then 1 is, in the color list, the index for Redball
 		goalloc = curr_blobweights[0][2] # yada yada 2 is Orangegoal
-		
+
 		if ("ball" in itemsFound or ballloc == -1) and ("goal" in itemsFound or goalloc == -1): # If it HAS been sentinelized or we don't care about it either way,
 			curr_velocity.angular.z = -0.1
 			pub.publish(curr_velocity)
@@ -264,7 +263,7 @@ def play_game():
 	resetter()
 	play_ball()
 
-	fd.close()	
+	fd.close()
 
 if __name__ == '__main__':
 	play_game()
