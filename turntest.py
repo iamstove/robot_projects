@@ -92,7 +92,7 @@ def twist_init():
 
 def turn_and_find():
 	global x
-	angles = dict.fromkeys(['b1','b2','g1','g2'], None)
+	angles = {}
 	sys.stderr.write("Startng Moving\n")
 	move_and_wait("L", 0.5, 90)
 	sys.stderr.write("Resetting and moving again\n")
@@ -102,8 +102,10 @@ def turn_and_find():
 	sys.stderr.write("Looking for things\n")
 	while not(move_complete):
 		if x[1] == 320.0:
+			sys.stderr.write("ball: "+str(del_r)+"\n")
 			angles['b1'] = del_r
 		if x[2] == 320.0:
+			sys.stderr.write("goal: "+str(del_r)+"\n")
 			angles['g1'] = del_r
 	sys.stderr.write("angles " + str(angles['b1'])+ ", "+str(angles['g1'])+'\n')
 
