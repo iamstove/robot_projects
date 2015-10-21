@@ -130,7 +130,7 @@ def follow_the_line():
 			#print("going!!")
 			pub.publish(curr_velocity)
 			#hope = 20  We're hopeful that we'll continue to see the line
-			
+
 		else: # decide whether to stay still or keep up hope
 			hope -= 1
 			curr_velocity.linear.x -= .01
@@ -156,7 +156,7 @@ def play_ball():
 
 	### NEEDS: TURN -PI/2 RAD ###
 	sys.stderr.write("Startng Moving\n")
-	move_and_wait("L", 0.5, 90)
+	#move_and_wait("L", 0.5, 90)
 	sys.stderr.write("Finished moving\n")
 	### THEN, WE SEARCH ###
 
