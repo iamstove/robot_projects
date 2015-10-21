@@ -3,6 +3,8 @@
 #Imports#
 import rospy
 from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
+from tf.transformations import euler_from_quaternion
 from cmvision.msg import Blobs, Blob
 from std_msgs.msg import Empty, String
 import time #itself!  WAUUUGHAHAHAHAHHAAAAA
@@ -56,7 +58,7 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 
 		for color_index in range(color_name.length()): # Divide by the total weight to find the center position
 			if area[color_index] == -1:
-				x[color_index] = -1 
+				x[color_index] = -1
 				y[color_index] = -1
 			else:
 				x[color_index] /= area[color_index]
