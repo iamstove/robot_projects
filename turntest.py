@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #Imports#
 import sys
 import rospy
@@ -16,6 +14,7 @@ pub = rospy.Publisher('kobuki_command', Twist, queue_size = 10) # Command publis
 pub2 = rospy.Publisher('keyboard_command', String, queue_size = 10) #publish to speed control, makes scanning turns easier
 pub3 = rospy.Publisher('/mobile_base/commands/reset_odometry', Empty, queue_size=10)
 SLEEP_TIME = .05
+color_namelist = ['Greenline', 'Redball', 'Orangegoal']
 
 def resetter():
 	global del_x
@@ -89,7 +88,7 @@ def twist_init():
 def turn_and_find():
 	sys.stderr.write("Startng Moving\n")
 	move_and_wait("L", 0.5, 90)
-	#pub2.publish("L .5 90")
+    #pub2.publish("L .5 90")
 	sys.stderr.write("Finished moving\n")
 
 
