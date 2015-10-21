@@ -20,7 +20,8 @@ def bumperCallback(data):
 
 def node_init():
 	global curr_velocity
-	global not_bumping = True
+	global not_bumping
+	not_bumping = True
 	curr_velocity.linear.x = 0.0
 	curr_velocity.linear.y = 0.0
 	curr_velocity.linear.z = 0.0
