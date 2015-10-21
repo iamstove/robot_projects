@@ -101,6 +101,7 @@ def move_and_wait(direction, speed, distance):
 	pub2.publish(direction + " " + repr(speed) + " " + str(distance))
 	while not(move_complete):
 		rospy.sleep(SLEEP_TIME)
+	move_complete = False
 
 def moveCallback(message):
 	global move_complete

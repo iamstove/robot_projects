@@ -113,7 +113,7 @@ def speed_change(command_type, max_speed, distance):
 	# We will also want to set the minimum speed to the appropriate one.
 	if command_type == 'R' or command_type == 'L':	# If we're working with a rotational command
 		del_final = del_final * math.pi / 180.0 ##then we know we heard degrees, so make rads
-		sys.stderr.write("Del final in rad: " + str(del_final)+"\n")
+		#sys.stderr.write("Del final in rad: " + str(del_final)+"\n")
 		spd_min = rot_min			##and set the min speed to the rotational min
 		acc_max = rot_max
 	else:				# Otherwise, we're working with a linear command
