@@ -67,19 +67,6 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 		curr_blobweights = [x, y] # Boom.
 		has_new_blobinfo = True
 
-
-		#print(blobloc)
-		curr_velocity.angular.z = K_P * blobloc + K_D * (blobloc - pastloc)
-		#print(curr_velocity.angular.z)
-		curr_velocity.linear.x = .2
-		pastloc = blobloc
-		#print("going!!")
-		pub.publish(curr_velocity)
-	else: #stay still
-		#print("Staying!!")
-		twist_init()
-		pub.publish(curr_velocity)
-
 def init_all():
 	twist_init()
 	global has_new_blobinfo
