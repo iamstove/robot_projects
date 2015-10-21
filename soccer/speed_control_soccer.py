@@ -55,7 +55,7 @@ def odomCallback(data):
 		r_0 = [data.pose.pose.position.x,
 			   data.pose.pose.position.y,
 			   data.pose.pose.position.z]
-		odom_reset = false
+		odom_reset = False
 
 	# Convert quaternion to degree
 	q = [data.pose.pose.orientation.x,
