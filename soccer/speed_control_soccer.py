@@ -136,19 +136,19 @@ def speed_change(command_type, max_speed, distance):
 			elif past_del_r < 0 and del_r > 0:
 				if past_del_r < -math.pi / 3:
 					turns -= 1
-			#del_final = del_final * math.pi / 180.0
+			#del_final = del_final * math.pi / 180.0 <you, you fucking piece of shit, why did you change
 			past_del_r = del_r
 			progr = (del_r + turns * 2 * math.pi) / del_final ##current rotation * number of turns * 2 * pi / final
-			sys.stderr.write("numerator: "+str(del_r + turns * 2 * math.pi)+"\n")
-			sys.stderr.write("denum: "+str(del_final)+"\n")
-			sys.stderr.write('Progress: ' +str(progr)+"\n")
+			#sys.stderr.write("numerator: "+str(del_r + turns * 2 * math.pi)+"\n")
+			#sys.stderr.write("denum: "+str(del_final)+"\n")
+			#sys.stderr.write('Progress: ' +str(progr)+"\n")
 		else:
 			sys.stderr.write(str(command_type) + " was submitted; invalid command type character.\n")
 			break
 
 		#speed = math.sqrt(max(spd_min*spd_min, (1.0 - math.fabs(1.0 - 2.0*progr)) * maxim * maxim))
 		speed = min(math.sqrt(max(spd_min*spd_min, acc_max*math.fabs(del_final - del_final*math.fabs(1 - 2.0*progr)))), maxim)
-		sys.stderr.write('Speed: ' +str(speed)+"\n")
+		#sys.stderr.write('Speed: ' +str(speed)+"\n")
 		if command_type == 'F':
 			curr_velocity.linear.x = speed
 		elif command_type == 'B':
@@ -158,7 +158,7 @@ def speed_change(command_type, max_speed, distance):
 		elif command_type == 'L':
 			curr_velocity.angular.z = speed
 
-		sys.stderr.write('Delr: '+str(del_r)+"\n")
+		#sys.stderr.write('Delr: '+str(del_r)+"\n")
 		if progr >= 1.0:	# If we're at or over 100% of the way there,
 			sys.stderr.write("command completed\n")
 			break
