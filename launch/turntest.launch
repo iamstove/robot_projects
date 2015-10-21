@@ -1,0 +1,19 @@
+<launch>
+		<!-- command: roslaunch gscam v4l.launch -->
+		<include file ="$(find gscam)/v4l.launch"/>
+
+		<!-- command: roslaunch mypackage cmvision.launch -->
+		<include file ="$(find mypackage)/scripts/launch/cmvision.launch"/>
+
+		<!-- command: roslaunch kobuki_node minimal.launch -->
+		<include file ="$(find kobuki_node)/launch/minimal.launch"/>
+
+		<!-- command: rosrun mypackage soccer/constant_command.py -->
+		<node name="constant_command" pkg="mypackage" type="constant_command.py"/>
+
+		<!-- command: rosrun mypackage soccer/speed_control_soccer.py -->
+		<node name="speed_control" pkg="mypackage" type="speed_control_soccer.py"/>
+
+		<!-- command: rosrun mypackage soccer/play_the_game.py -->
+		<node name="soccer_player" pkg="mypackage" type="turntest.py"/>
+</launch>
