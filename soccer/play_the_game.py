@@ -35,8 +35,10 @@ def odomCallback(data): #still think we might want to publish to speed control t
 	del_r = euler_from_quaternion(q)
 
 def resetter():
-	global del_x = [0, 0, 0]
-	global del_r = [0, 0, 0]
+	global del_x
+	del_x = [0, 0, 0]
+	global del_r
+	del_r = [0, 0, 0]
 	while pub3.get_num_connections() == 0:
 		pass
 	pub3.publish(Empty())
@@ -70,7 +72,9 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 				y[color_index] /= area[color_index]
 
 		curr_blobweights = [x, y] # Boom.
-		has_new_blobinfo = True
+	else:
+		curr_blobweights = [area, area]
+	has_new_blobinfo = True
 
 def init_all():
 	twist_init()
@@ -100,7 +104,7 @@ def follow_the_line():
 	### a green blob for 10 new sets of blobs.	This trigger activates with changes in not_done_with_line
 	not_done_with_line = True
 
-	hope = 80 # The amount of hope we have at this point in time that we're on the line
+	hope = 100 # The amount of hope we have at this point in time that we're on the line
 
 	# The loop will incorporate a wait that waits 1/10 the time we waited to get the blob the last time.
 	### This is so the program doesn't consume huge CPU.
@@ -112,21 +116,22 @@ def follow_the_line():
 			rospy.sleep(max(time_waited / 10, SLEEP_TIME / 10)) # Sleep for a bit.  Maybe?
 		time_waited = time.clock() - time_last # Get the difference now
 		time_last = time.clock() # Reset the time
+		has_new_blobinfo = False	
 		# Now we have_new_blobinfo, so let's process.
-
+	
 		blobloc = curr_blobweights[0][0] # 0 is x, and then 0 is, in the color list, the index for Greenline
 		if blobloc != -1: # If it hasn't been sentinelized
 			blobloc = (320.0 - blobloc) / 320.0
 			curr_velocity.angular.z = K_P * blobloc + K_D * (blobloc - pastloc)
 			#print(curr_velocity.angular.z)
-			curr_velocity.linear.x = .2
+			curr_velocity.linear.x = hope / 500.0
 			pastloc = blobloc
 			#print("going!!")
 			pub.publish(curr_velocity)
-			hope = 10 # We're hopeful that we'll continue to see the line
+			hope = 100 # We're hopeful that we'll continue to see the line
 		else: # decide whether to stay still or keep up hope
 			hope -= 1
-			if hope < -300:
+			if hope < -50:
 				not_done_with_line = False # We're not NOT done with it ...
 			elif hope < 0:
 				#print("Staying!!")
@@ -257,7 +262,7 @@ def play_game():
 	rospy.Subscriber('subcontrol', String, moveCallback)
 	follow_the_line()
 	resetter()
-	# play_ball()
+	play_ball()
 
 	fd.close()	
 
