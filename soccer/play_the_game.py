@@ -169,7 +169,6 @@ def play_ball():
 		ballloc = curr_blobweights[0][1] # 0 is x, and then 1 is, in the color list, the index for Redball
 		goalloc = curr_blobweights[0][2] # yada yada 2 is Orangegoal
 
-		if searchobj == SEARCH_NONE:
 		if ballloc == -1 and goalloc == -1: # If it HAS been sentinelized
 			curr_velocity.angular.z = 0.2
 			pub.publish(curr_velocity)
@@ -200,7 +199,7 @@ def play_game():
 
 	follow_the_line()
 	resetter()
-	play_ball()
+	# play_ball()
 
 	rospy.spin()
 
