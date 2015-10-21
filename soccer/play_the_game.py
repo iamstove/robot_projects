@@ -51,7 +51,7 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 					area[color_index] += box.area
 				y[color_index] += box.y * box.area
 				x[color_index] += box.x * box.area
-			else:
+			# else
 				# Unidentified or irrelevant color.  Ignore it / do nothing.
 
 		for color_index in range(color_name.length()): # Divide by the total weight to find the center position
