@@ -89,6 +89,8 @@ def follow_the_line():
 	### This is similar to nodes in that it's basically waiting for a publish trigger to come down
 	### and signal this 'node' to get to work.
 
+	global pastloc
+
 	# We will have a trigger that will mean we're finished with the line; this trigger requires we have not seen
 	### a green blob for 10 new sets of blobs.  This trigger activates with changes in not_done_with_line
 	not_done_with_line = True
