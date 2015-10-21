@@ -138,7 +138,8 @@ def speed_change(command_type, max_speed, distance):
 					turns -= 1
 			del_final = del_final * math.pi / 180.0
 			past_del_r = del_r
-			progr = (del_r + turns * 2 * math.pi) / del_final ##then our progress depends on del_r
+			progr = (del_r + turns * 2 * math.pi) / del_final ##current rotation * number of turns * 2 * pi / final
+			sys.stderr.write("numerator: "+str(del_r + turns * 2 * math.pi)+"\n")
 		else:
 			sys.stderr.write(str(command_type) + " was submitted; invalid command type character.\n")
 			break
