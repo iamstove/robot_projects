@@ -4,11 +4,13 @@
 import rospy
 from geometry_msgs.msg import Twist
 from cmvision.msg import Blobs, Blob
+from std_msgs.msg import Empty
 import time #itself!  WAUUUGHAHAHAHAHHAAAAA
 
 #Globals#
 pub = rospy.Publisher('kobuki_command', Twist, queue_size = 10) # Command publisher
 pub2 = rospy.Publisher('keyboard_command', String, queue_size = 10) #publish to speed control, makes scanning turns easier
+pub3 = rospy.Publisher('/mobile_base/commands/reset_odometry', Empty, queue_size=10)
 
 K_P = 1.5 # K_p in the PID equation
 K_D = 1.25 # K_d in the PID equation
@@ -31,6 +33,11 @@ def odomCallback(data): #still think we might want to publish to speed control t
     y = data.pose.pose.position.y
     #msg = "(%.6f,%.6f) at %.6f degree." % (x, y, degree)
     #rospy.loginfo(msg)
+
+def resetter():
+    while pub3.get_num_connections() == 0:
+        pass
+    pub3.publish(Empty())
 
 def blobsCallback(data): # This is called whenever a blobs message is posted; this happens constnatly even if blobs are not detected
 	global curr_blobweights
