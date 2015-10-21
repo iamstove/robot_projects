@@ -7,14 +7,15 @@ from cmvision.msg import Blobs, Blob
 import time #itself!  WAUUUGHAHAHAHAHHAAAAA
 
 #Globals#
-pub = rospy.Publisher('kobuki_command', Twist, queue_size=10) # Command publisher
+pub = rospy.Publisher('kobuki_command', Twist, queue_size = 10) # Command publisher
+pub2 = rospy.Publisher('keyboard_command', String, queue_size = 10) #publish to speed control, makes scanning turns easier
 
 K_P = 1.5 # K_p in the PID equation
 K_D = 1.25 # K_d in the PID equation
 
 color_namelist = ['Greenline', 'Redball', 'Orangegoal'] # We'll use this for indexing different colors.
 
-def odomCallback(data): # still think we might want to publish to speed control to move, but we'll still need odom for finding the angles
+def odomCallback(data): #still think we might want to publish to speed control to move, but we'll still need odom for finding the angles
     global del_x
     global del_r
     # Convert quaternion to degree
@@ -85,7 +86,7 @@ def twist_init():
 	curr_velocity = Twist()
 	curr_velocity.linear.x, curr_velocity.linear.y, curr_velocity.linear.z = 0, 0, 0
 	curr_velocity.angular.x, curr_velocity.angular.y, curr_velocity.angular.z = 0, 0, 0
-\
+
 def follow_the_line():
 	# We first want to declare our dependency upon the global blob area.
 	global curr_blobweights # Note well that this is effectively all blobsCallback changes when it runs.
@@ -135,7 +136,7 @@ def follow_the_line():
 	# Now we're done with the line, so we need to look for the ball
 
 def play_ball():
-	state = 0 # 0 = neither has been found, 1 = ball found, 2 = goal found, 3 = both found
+	SEARCH_NONE, SEARCH_BALL, SEARCH_GOAL = 0,0,0 # Supposed to be a state thing, complete this line
 
 	# We first want to declare our dependency upon the global blob area.
 	global curr_blobweights # Note well that this is effectively all blobsCallback changes when it runs.
@@ -143,8 +144,6 @@ def play_ball():
 	global has_new_blobinfo
 
 	### NEEDS: TURN -PI/2 RAD ###
-	
-	
 
 	### THEN, WE SEARCH ###
 
@@ -182,6 +181,11 @@ def play_ball():
 				# We've still got hope!!!
 
 	# Now we're done with the line, so we need to look for the ball
+
+def stball():
+    pub2.publish("L .25 90, R .2 180") #turn the robot
+
+
 
 def play_game():
 	init_all() # Initialize everything (includes initialization of the twist for current motion)
