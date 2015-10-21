@@ -113,6 +113,7 @@ def speed_change(command_type, max_speed, distance):
 	# We will also want to set the minimum speed to the appropriate one.
 	if command_type == 'R' or command_type == 'L':	# If we're working with a rotational command
 		del_final = del_final * math.pi / 180.0 ##then we know we heard degrees, so make rads
+		sys.stderr.write(str(del_final)+"\n")
 		spd_min = rot_min			##and set the min speed to the rotational min
 		acc_max = rot_max
 	else:				# Otherwise, we're working with a linear command
@@ -139,12 +140,12 @@ def speed_change(command_type, max_speed, distance):
 			past_del_r = del_r
 			progr = (del_r + turns * 2 * math.pi) / del_final ##then our progress depends on del_r
 		else:
-			rospy.loginfo(str(command_type) + " was submitted; invalid command type character.")
+			sys.stderr.write(str(command_type) + " was submitted; invalid command type character.\n")
 			break
 
 		#speed = math.sqrt(max(spd_min*spd_min, (1.0 - math.fabs(1.0 - 2.0*progr)) * maxim * maxim))
 		speed = min(math.sqrt(max(spd_min*spd_min, acc_max*math.fabs(del_final - del_final*math.fabs(1 - 2.0*progr)))), maxim)
-		print(speed)
+		sys.stderr.write(speed+"\n")
 		if command_type == 'F':
 			curr_velocity.linear.x = speed
 		elif command_type == 'B':
@@ -156,7 +157,7 @@ def speed_change(command_type, max_speed, distance):
 
 		sys.stderr.write(str(progr)+"\n")
 		if progr >= 1:	# If we're at or over 100% of the way there,
-			rospy.loginfo("command completed")
+			sys.stderr.write("command completed\n")
 			break
 		#publish the changed speed to the constant command's topic
 		pub.publish(curr_velocity)
