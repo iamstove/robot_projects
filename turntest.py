@@ -89,7 +89,7 @@ def twist_init():
 def turn_and_find():
 	sys.stderr.write("Startng Moving\n")
 	move_and_wait("L", 0.5, 90)
-    #pub2.publish("L .5 90")
+	#pub2.publish("L .5 90")
 	sys.stderr.write("Finished moving\n")
 
 
@@ -112,8 +112,8 @@ def play_game():
 	rospy.Subscriber('/blobs', Blobs, blobsCallback)
 	rospy.Subscriber('/odom', Odometry, odomCallback)
 	rospy.Subscriber('subcontrol', String, moveCallback)
-    resetter()
-    turn_and_find()
+	resetter()
+	turn_and_find()
 	sys.stderr.write("End of the line\nPlaying ball\n")
 	play_ball()
 
