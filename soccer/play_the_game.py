@@ -14,7 +14,7 @@ K_D = 1.25 # K_d in the PID equation
 
 color_namelist = ['Greenline', 'Redball', 'Orangegoal'] # We'll use this for indexing different colors.
 
-def odomCallback(data): #still think we might want to publish to speed control to move, but we'll still need odom for finding the angles
+def odomCallback(data): # still think we might want to publish to speed control to move, but we'll still need odom for finding the angles
     global del_x
     global del_r
     # Convert quaternion to degree
@@ -135,7 +135,7 @@ def follow_the_line():
 	# Now we're done with the line, so we need to look for the ball
 
 def play_ball():
-	SEARCH_NONE, SEARCH_BALL, SEARCH_GOAL # Supposed to be a state thing, complete this line
+	state = 0 # 0 = neither has been found, 1 = ball found, 2 = goal found, 3 = both found
 
 	# We first want to declare our dependency upon the global blob area.
 	global curr_blobweights # Note well that this is effectively all blobsCallback changes when it runs.
@@ -143,6 +143,8 @@ def play_ball():
 	global has_new_blobinfo
 
 	### NEEDS: TURN -PI/2 RAD ###
+	
+	
 
 	### THEN, WE SEARCH ###
 
