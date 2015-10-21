@@ -32,6 +32,8 @@ def odomCallback(data): #still think we might want to publish to speed control t
     #msg = "(%.6f,%.6f) at %.6f degree." % (x, y, degree)
     #rospy.loginfo(msg)
 
+
+
 def blobsCallback(data): # This is called whenever a blobs message is posted; this happens constnatly even if blobs are not detected
 	global curr_blobweights
 	global has_new_blobinfo
