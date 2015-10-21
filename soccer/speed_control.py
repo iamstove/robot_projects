@@ -10,6 +10,7 @@ from std_msgs.msg import String
 
 
 pub = rospy.Publisher('kobuki_command', Twist, queue_size=10)
+pub2 = rospy.Publisher('subcontrol', String, queue_size=10)
 
 def twist_init():
 	global curr_velocity
@@ -156,6 +157,7 @@ def speed_change(command_type, max_speed, distance):
 			break
 		#publish the changed speed to the constant command's topic
 		pub.publish(curr_velocity)
+		pub2.publish("Done")
 		#have a nap
 		rospy.sleep(sleep_time)
 
