@@ -4,7 +4,7 @@
 import rospy
 from geometry_msgs.msg import Twist
 from cmvision.msg import Blobs, Blob
-from std_msgs.msg import Empty
+from std_msgs.msg import Empty, String
 import time #itself!  WAUUUGHAHAHAHAHHAAAAA
 
 #Globals#
