@@ -135,7 +135,7 @@ def follow_the_line():
 				#print("Staying!!")
 				twist_init()
 				pub.publish(curr_velocity)
-			else:
+			# else:
 				# We've still got hope!!!
 
 	# Now we're done with the line, so we need to look for the ball
