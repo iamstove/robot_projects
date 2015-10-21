@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 #Imports#
+import sys
 import rospy
 from geometry_msgs.msg import Twist
 import math
@@ -104,7 +105,7 @@ def follow_the_line():
 	### a green blob for 10 new sets of blobs.	This trigger activates with changes in not_done_with_line
 	not_done_with_line = True
 
-	hope = 20 # The amount of hope we have at this point in time that we're on the line
+	hope = 0 # The amount of hope we have at this point in time that we're on the line
 
 	# The loop will incorporate a wait that waits 1/10 the time we waited to get the blob the last time.
 	### This is so the program doesn't consume huge CPU.
@@ -128,10 +129,12 @@ def follow_the_line():
 			pastloc = blobloc
 			#print("going!!")
 			pub.publish(curr_velocity)
-			hope = 20 # We're hopeful that we'll continue to see the line
-            sys.stderr.write(str(hope)+"\n")
+			#hope = 20  We're hopeful that we'll continue to see the line
+			
 		else: # decide whether to stay still or keep up hope
 			hope -= 1
+			curr_velocity.linear.x -= .01
+			#sys.stderr.write(str(hope)+"\n")
 			if hope < 0:
 				not_done_with_line = False # We're not NOT done with it ...
 				#print("Staying!!")
@@ -152,8 +155,9 @@ def play_ball():
 	global del_r
 
 	### NEEDS: TURN -PI/2 RAD ###
+	sys.stderr.write("Startng Moving\n")
 	move_and_wait("L", 0.5, 90)
-
+	sys.stderr.write("Finished moving\n")
 	### THEN, WE SEARCH ###
 
 	not_done_with_search = True # We begin our search now, in fact
@@ -262,6 +266,7 @@ def play_game():
 	rospy.Subscriber('subcontrol', String, moveCallback)
 	follow_the_line()
 	resetter()
+	sys.stderr.write("End of the line\nPlaying ball\n")
 	play_ball()
 
 	fd.close()
