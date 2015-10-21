@@ -35,18 +35,18 @@ def parse_command(data):
 		speed_change(command_type[0].upper(), float(max_speed), float(distance))
 		resetter()
 		rospy.sleep(0.25)
-		
+
 		#the split command in this case should always have 3 parts
 		#print ('Split command:' + str((command_type, max_speed, distance)))
-		
+
 
 def odomCallback(data):
 	global del_x
-	global del_r 
+	global del_r
 	global odom_reset
 	global q_0
 	global r_0
-	
+
 	if True == odom_reset:
 		q_0 = [data.pose.pose.orientation.x,
 	           data.pose.pose.orientation.y,
@@ -56,27 +56,27 @@ def odomCallback(data):
 			   data.pose.pose.position.y,
 			   data.pose.pose.position.z]
 		odom_reset = false
- 
+
 	# Convert quaternion to degree
 	q = [data.pose.pose.orientation.x,
 		 data.pose.pose.orientation.y,
 		 data.pose.pose.orientation.z,
 		 data.pose.pose.orientation.w]
-	
+
 	r = [data.pose.pose.position.x,
 		 data.pose.pose.position.y,
 		 data.pose.pose.position.z]
-	
+
 	euler  = euler_from_quaternion(q)
 	euler0 = euler_from_quaternion(q_0)
-	
+
 	roll, pitch, yaw = map(lambda x, y: x - y, euler, euler0)
 	# roll, pitch, and yaw are in radian
 	# degree = yaw * 180 / math.pi
 	del_r = yaw
 
 	del_x, del_y, del_z = map(lambda x, y: x - y, r, r_0)
-	
+
 
 
 # method begins
@@ -85,9 +85,9 @@ def speed_change(command_type, max_speed, distance):
 	global not_bumping
 	global del_x
 	global del_r
-	
+
 	lin_min = 0.03
-	rot_min = 0.3
+	rot_min = 0.5
 	lin_max = 1
 	rot_max = 2
 	progr = 0
@@ -95,7 +95,7 @@ def speed_change(command_type, max_speed, distance):
 	acc_max = 0	# max accel, changed based on type of command
 	turns = 0	# The number of turns counterclockwise; starts at zero
 	past_del_r = 0	# the previous delta-r was zero
-	
+
 	not_bumping = True
 	maxim = max_speed # The maximum speed, aka k
 	speed = 0
@@ -106,7 +106,7 @@ def speed_change(command_type, max_speed, distance):
 	resetter()
 
 	rospy.loginfo("Command: " + command_type + " " + str(max_speed) + " " + str(distance))
-	
+
 	# if we're working with a rotation instruction, we're going to need to convert
 	# from deg to radians; the command is in deg.
 	# We will also want to set the minimum speed to the appropriate one.
@@ -121,8 +121,8 @@ def speed_change(command_type, max_speed, distance):
 	# where the final delta should be.
 	if command_type == 'B' or command_type == 'R':	# If the command is a 'negative directioned' one
 		del_final = -del_final			##Make the final destination negative
-	
-	while not_bumping:	# While we haven't collided with anything (in the front at least) ...	
+
+	while not_bumping:	# While we haven't collided with anything (in the front at least) ...
 		# change the twist curr_velocity to be a twist representative of the current motion required
 		if command_type == 'F' or command_type == 'B':	# If we're moving forwards or backwards
 			progr = del_x / del_final		##then our level of progress depends on del_x
@@ -137,12 +137,12 @@ def speed_change(command_type, max_speed, distance):
 			past_del_r = del_r
 			progr = (del_r + turns * 2 * math.pi) / del_final ##then our progress depends on del_r
 		else:
-			rospy.loginfo(str(command_type) + " was submitted; invalid command type character.") 
+			rospy.loginfo(str(command_type) + " was submitted; invalid command type character.")
 			break
-				
+
 		#speed = math.sqrt(max(spd_min*spd_min, (1.0 - math.fabs(1.0 - 2.0*progr)) * maxim * maxim))
 		speed = min(math.sqrt(max(spd_min*spd_min, acc_max*math.fabs(del_final - del_final*math.fabs(1 - 2.0*progr)))), maxim)
-		print(speed)	
+		print(speed)
 		if command_type == 'F':
 			curr_velocity.linear.x = speed
 		elif command_type == 'B':
@@ -151,25 +151,25 @@ def speed_change(command_type, max_speed, distance):
 			curr_velocity.angular.z = -speed
 		elif command_type == 'L':
 			curr_velocity.angular.z = speed
-		
+
 		if progr >= 1:	# If we're at or over 100% of the way there,
 			rospy.loginfo("command completed")
 			break
 		#publish the changed speed to the constant command's topic
 		pub.publish(curr_velocity)
-		pub2.publish("Done")
 		#have a nap
 		rospy.sleep(sleep_time)
 
 	curr_velocity.linear.x = 0
 	curr_velocity.angular.z = 0
 	pub.publish(curr_velocity)
+    pub2.publish("Done")
 
 def resetter():
 	global odom_reset
 	odom_reset = True
-	
-	
+
+
 def bump_respond(data):
 	global not_bumping
 	not_bumping = False
