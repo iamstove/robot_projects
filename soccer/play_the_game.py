@@ -104,7 +104,7 @@ def follow_the_line():
 	### a green blob for 10 new sets of blobs.	This trigger activates with changes in not_done_with_line
 	not_done_with_line = True
 
-	hope = 100 # The amount of hope we have at this point in time that we're on the line
+	hope = 20 # The amount of hope we have at this point in time that we're on the line
 
 	# The loop will incorporate a wait that waits 1/10 the time we waited to get the blob the last time.
 	### This is so the program doesn't consume huge CPU.
@@ -128,7 +128,8 @@ def follow_the_line():
 			pastloc = blobloc
 			#print("going!!")
 			pub.publish(curr_velocity)
-			hope = 100 # We're hopeful that we'll continue to see the line
+			hope = 20 # We're hopeful that we'll continue to see the line
+            sys.stderr.write(str(hope)+"\n")
 		else: # decide whether to stay still or keep up hope
 			hope -= 1
 			if hope < 0:
