@@ -132,6 +132,7 @@ def speed_change(command_type, max_speed, distance):
 			elif past_del_r < 0 and del_r > 0:
 				if past_del_r < -math.pi / 3:
 					turns -= 1
+			del_final = del_final * math.pi / 180.0
 			past_del_r = del_r
 			progr = (del_r + turns * 2 * math.pi) / del_final ##then our progress depends on del_r
 		else:
