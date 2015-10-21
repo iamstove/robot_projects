@@ -163,7 +163,7 @@ def speed_change(command_type, max_speed, distance):
 	curr_velocity.linear.x = 0
 	curr_velocity.angular.z = 0
 	pub.publish(curr_velocity)
-    pub2.publish("Done")
+	pub2.publish("Done")
 
 def resetter():
 	global odom_reset

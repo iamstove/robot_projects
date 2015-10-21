@@ -106,7 +106,7 @@ def play_game():
 	global fd
 	fd = open("roserrlog.txt", "w")
 	init_all() # Initialize everything (includes initialization of the twist for current motion)
-	rospy.init_node('soccer_player', anonymous = True) # Initialize this node
+	rospy.init_node('turntest', anonymous = True) # Initialize this node
 	rospy.Subscriber('/blobs', Blobs, blobsCallback)
 	rospy.Subscriber('/odom', Odometry, odomCallback)
 	rospy.Subscriber('subcontrol', String, moveCallback)

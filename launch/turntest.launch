@@ -15,5 +15,5 @@
 		<node name="speed_control" pkg="mypackage" type="speed_control_soccer.py"/>
 
 		<!-- command: rosrun mypackage soccer/play_the_game.py -->
-		<node name="soccer_player" pkg="mypackage" type="turntest.py"/>
+		<node name="turntest" pkg="mypackage" type="turntest.py"/>
 </launch>
