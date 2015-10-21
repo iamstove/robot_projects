@@ -17,6 +17,8 @@ pub2 = rospy.Publisher('keyboard_command', String, queue_size = 10) #publish to 
 pub3 = rospy.Publisher('/mobile_base/commands/reset_odometry', Empty, queue_size=10)
 SLEEP_TIME = .05
 color_namelist = ['Greenline', 'Redball', 'Orangegoal']
+x = []
+y = []
 
 def resetter():
 	global del_x
@@ -44,6 +46,7 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 	global curr_blobweights
 	global has_new_blobinfo
 	global fd
+	global x, y
 	x = [0, 0, 0] # Greenline, Redball, Orangegoal
 	y = [0, 0, 0] # could be generalized but is ok for now
 	area = [-1, -1, -1]
@@ -88,6 +91,7 @@ def twist_init():
 	curr_velocity.angular.x, curr_velocity.angular.y, curr_velocity.angular.z = 0, 0, 0
 
 def turn_and_find():
+	global x
 	angles = dict.fromkeys(['b1','b2','g1','g2'], None)
 	sys.stderr.write("Startng Moving\n")
 	move_and_wait("L", 0.5, 90)
@@ -97,9 +101,9 @@ def turn_and_find():
 	pub2.publish("R .15 180")
 	sys.stderr.write("Looking for things\n")
 	while not(move_complete):
-		if x[Redball] == 320.0:
+		if x[1] == 320.0:
 			angles['b1'] = del_r
-		if x[Orangegoal] == 320.0:
+		if x[2] == 320.0:
 			angles['g1'] = del_r
 	sys.stderr.write("angles " + str(angles['b1'])+ ", "+str(angles['g1'])+'\n')
 
