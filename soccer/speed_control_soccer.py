@@ -2,6 +2,7 @@
 
 import rospy
 import math
+import sys
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import Twist
@@ -153,6 +154,7 @@ def speed_change(command_type, max_speed, distance):
 		elif command_type == 'L':
 			curr_velocity.angular.z = speed
 
+		sys.stderr.write(str(progr)+"\n")
 		if progr >= 1:	# If we're at or over 100% of the way there,
 			rospy.loginfo("command completed")
 			break
