@@ -157,7 +157,7 @@ def speed_change(command_type, max_speed, distance):
 
 		sys.stderr.write('Delr: '+str(del_r)+"\n")
 		sys.stderr.write('Progress: ' +str(progr)+"\n")
-		if progr >= 1:	# If we're at or over 100% of the way there,
+		if progr >= 1.0:	# If we're at or over 100% of the way there,
 			sys.stderr.write("command completed\n")
 			break
 		#publish the changed speed to the constant command's topic
