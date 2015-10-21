@@ -25,14 +25,10 @@ def odomCallback(data): #still think we might want to publish to speed control t
          data.pose.pose.orientation.y,
          data.pose.pose.orientation.z,
          data.pose.pose.orientation.w]
-    roll, pitch, yaw = euler_from_quaternion(q)
     # roll, pitch, and yaw are in radian
     # degree = yaw * 180 / math.pi
-    del_x = data.pose.pose.position.x
-    del_r = yaw
-    y = data.pose.pose.position.y
-    #msg = "(%.6f,%.6f) at %.6f degree." % (x, y, degree)
-    #rospy.loginfo(msg)
+    del_x = [data.pose.pose.position.x, data.pose.pose.position.y, data.pose.pose.position.z]
+    del_r = euler_from_quaternion(q)
 
 def resetter():
     while pub3.get_num_connections() == 0:
@@ -200,8 +196,8 @@ def play_game():
 	rospy.Subscriber('/blobs', Blobs, blobsCallback)
 	rospy.Subscriber('/odom', Odometry, odomCallback)
 
-
 	follow_the_line()
+	resetter()
 	play_ball()
 
 	rospy.spin()
