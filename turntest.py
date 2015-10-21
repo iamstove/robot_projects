@@ -88,7 +88,7 @@ def twist_init():
 	curr_velocity.angular.x, curr_velocity.angular.y, curr_velocity.angular.z = 0, 0, 0
 
 def turn_and_find():
-	angles = dict.fromkeys('b1','b2','g1','g2')
+	angles = dict.fromkeys(['b1','b2','g1','g2'], None)
 	sys.stderr.write("Startng Moving\n")
 	move_and_wait("L", 0.5, 90)
 	sys.stderr.write("Resetting and moving again\n")
@@ -102,7 +102,7 @@ def turn_and_find():
 		if x[Orangegoal] == 320.0:
 			angles['g1'] = del_r
 	sys.stderr.write("angles " + str(angles['b1'])+ ", "+str(angles['g1'])+'\n')
-	
+
 
 def move_and_wait(direction, speed, distance):
 	global move_complete, SLEEP_TIME
