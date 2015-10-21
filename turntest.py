@@ -90,6 +90,7 @@ def twist_init():
 def turn_and_find():
 	sys.stderr.write("Startng Moving\n")
 	move_and_wait("L", 0.5, 90)
+	resetter()
 	rospy.sleep(.5)
 	pub2.publish("R .5 90")
 	sys.stderr.write("Finished moving\n")
