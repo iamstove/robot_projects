@@ -55,7 +55,7 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 		for box in data.blobs:
 			if box.name in color_namelist:
 				color_index = color_namelist.index(box.name)
-				if color_index == color_namelist.index('Orangegoal') and box.area > 5000: #we only consider goal boxes that are BIG
+				if color_index == color_namelist.index('Orangegoal') and box.area > 2500: #we only consider goal boxes that are BIG
 					#sys.stderr.write(str(color_index)+" - " +str(box.area) + " \n")
 					if area[color_index] == -1:
 						area[color_index] = box.area
@@ -105,9 +105,9 @@ def turn_and_find():
 	angles = {}
 	maxgoal = -1
 	sys.stderr.write("Startng Moving\n")
-	move_and_wait("L", 0.5, 90)
+	move_and_wait("R", 0.5, 90)
 	sys.stderr.write("Resetting and moving again\n")
-	pub2.publish("R .2 180")
+	pub2.publish("L .2 180")
 	sys.stderr.write("Looking for things\n")
 	middle = 320;
 	while not(move_complete):
@@ -130,8 +130,8 @@ def turn_and_find():
 	else:
 		move_and_wait("B", .5, .5)
 
-	move_and_wait("L", .5 ,180)
-	pub2.publish("R .2 180")
+	move_and_wait("R", .5 ,180)
+	pub2.publish("L .2 180")
 	sys.stderr.write("Looking for things again\n")
 	maxgoal = -1 #we'll have a new biggest
 	while not(move_complete):
@@ -178,7 +178,7 @@ def triangles(dict):
 	height_b = math.tan(dict['b2'])*y
 
 	hr = height_g-height_b
-	lam = math.atan(hr/dict['b1'])
+	lam = math.atan(hr/(y-x))
 	w = height_b/math.tan(lam)
 	dist = y + w
 	lam = math.degrees(lam)
