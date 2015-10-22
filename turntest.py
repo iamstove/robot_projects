@@ -54,12 +54,20 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 		for box in data.blobs:
 			if box.name in color_namelist:
 				color_index = color_namelist.index(box.name)
-				if area[color_index] == -1:
-					area[color_index] = box.area
+				if color_index == 2 and box.area > 1000: #we only consider goal boxes that are BIG
+					if area[color_index] == -1:
+						area[color_index] = box.area
+					else:
+						area[color_index] += box.area
+					y[color_index] += box.y * box.area
+					x[color_index] += box.x * box.area
 				else:
-					area[color_index] += box.area
-				y[color_index] += box.y * box.area
-				x[color_index] += box.x * box.area
+					if area[color_index] == -1:
+						area[color_index] = box.area
+					else:
+						area[color_index] += box.area
+					y[color_index] += box.y * box.area
+					x[color_index] += box.x * box.area
 			else:
 				fd.write("Unidentified or irrelevant color: " + box.name + "\n")
 
