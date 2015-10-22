@@ -103,6 +103,7 @@ def twist_init():
 def turn_and_find():
 	global x, move_complete
 	angles = {}
+	maxgoal = -1
 	sys.stderr.write("Startng Moving\n")
 	move_and_wait("L", 0.5, 90)
 	sys.stderr.write("Resetting and moving again\n")
@@ -117,7 +118,8 @@ def turn_and_find():
 		if (x[2] < middle - 5) and (x[2] > middle + 5):
 			#if not angles.has_key('g1'):
 			#	sys.stderr.write("goal: "+str(del_r[2])+"\n")
-			angles['g1'] = del_r[2]
+			if maxgoal < area[2]: #we only want the center of the biggest goal we find
+				angles['g1'] = del_r[2]
 	move_complete = False
 	angle1 = angles['b1'] *180.0 / math.pi
 	angle2 = angles['g1']*180.0/math.pi
@@ -131,6 +133,7 @@ def turn_and_find():
 	move_and_wait("L", .5 ,180)
 	pub2.publish("R .2 180")
 	sys.stderr.write("Looking for things again\n")
+	maxgoal = -1 #we'll have a new biggest
 	while not(move_complete):
 		if (x[1] < middle + 5) and (x[1] > middle - 5):
 			#if not angles.has_key('b2'):
@@ -139,7 +142,8 @@ def turn_and_find():
 		if (x[2] < middle + 5) and (x[2] > middle - 5):
 			#if not angles.has_key('g2'):
  			#	sys.stderr.write("goal: "+str(del_r[2])+"\n")
-			angles['g2'] = del_r[2]
+			if maxgoal < area[2]: #we only want the center of the biggest goal we find
+				angles['g2'] = del_r[2]
 	move_complete = False
 	angle3 = angles['b2'] * 180.0 / math.pi
 	angle4 = angles['g2'] * 180.0 / math.pi
