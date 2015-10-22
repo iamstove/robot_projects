@@ -28,6 +28,7 @@ def resetter():
 	while pub3.get_num_connections() == 0:
 		pass
 	pub3.publish(Empty())
+	rospy.sleep(.5)
 
 def odomCallback(data): #still think we might want to publish to speed control to move, but we'll still need odom for finding the angles
 	global del_x
@@ -105,8 +106,6 @@ def turn_and_find():
 	sys.stderr.write("Startng Moving\n")
 	move_and_wait("L", 0.5, 90)
 	sys.stderr.write("Resetting and moving again\n")
-	resetter()
-	rospy.sleep(.5)
 	pub2.publish("R .2 180")
 	sys.stderr.write("Looking for things\n")
 	middle = 320;
@@ -124,15 +123,13 @@ def turn_and_find():
 	angle2 = angles['g1']*180.0/math.pi
 	sys.stderr.write("angles (b1,b2): " + str(angle1)+ ", "+str(angle2)+'\n')
 	resetter()
-	rospy.sleep(.5)
 	if angles['b1'] < -math.pi/2:
 		move_and_wait("F", .5, .5)
 	else:
 		move_and_wait("B", .5, .5)
 
-	resetter()
-	rospy.sleep(.5)
-	pub2.publish("L .2 180")
+	move_and_wait("L", .5 ,180)
+	pub2.publish("R .2 180")
 	sys.stderr.write("Looking for things again\n")
 	while not(move_complete):
 		if (x[1] < middle + 5) and (x[1] > middle - 5):
@@ -146,6 +143,7 @@ def turn_and_find():
 	move_complete = False
 	angle3 = angles['b2'] * 180.0 / math.pi
 	angle4 = angles['g2'] * 180.0 / math.pi
+	resetter()
 	sys.stderr.write("angles (b2, g2): " + str(angle3)+ ", "+str(angle4)+'\n')
 	(final_dist,final_angle)=triangles(angles)
 	move_and_wait("F", .25, final_dist)
@@ -159,20 +157,22 @@ def move_and_wait(direction, speed, distance):
 	while not(move_complete):
 		rospy.sleep(SLEEP_TIME)
 	move_complete = False
+	resetter()
 
 def triangles(dict):
-	'''this function takes a dictionary of angles in radians and returns a tuple of distance and angle IN DEGREES this allows for
-	direct input in to the moving functions'''
-	x = (.5 * math.tan(dict['g1'])/(math.tan(dict['g2'])-math.tan(dict['g1']))
-	hg = math.tan(dict['g2'])*x
+	'''this function takes a dictionary of angles in radians and returns a tuple of distance and angle IN DEGREES this allows
+	for direct input in to the moving functions'''
+	x = (.5 * math.tan(dict['g1']))/(math.tan(dict['g2'])-math.tan(dict['g1']))
+	height_g = (math.tan(dict['g2'])*x)
 
-	y = (.5 * math.tan(dict['b1'])/(math.tan(dict['b2'])-math.tan(dict['b1']))
-	hb = math.tan(dict['b2'])*y
+	y = (.5 * math.tan(dict['b1']))/(math.tan(dict['b2'])-math.tan(dict['b1']))
+	height_b = math.tan(dict['b2'])*y
 
-	hr = hg-hb
+	hr = height_g-height_b
 	lam = math.atan(hr/dict['b1'])
-	w = hb/math.tan(lam)
+	w = height_b/math.tan(lam)
 	dist = y + w
+	lam = math.degrees(lam)
 	return (dist, lam)
 
 def moveCallback(message):
