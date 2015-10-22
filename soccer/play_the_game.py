@@ -358,6 +358,7 @@ def play_game():
 	follow_the_line()
 	resetter()
 	sys.stderr.write("End of the line\nPlaying ball\n")
+	rospy.sleep(3) #time to turn the lid up
 	turn_and_find()
 
 	fd.close()
