@@ -91,24 +91,53 @@ def twist_init():
 	curr_velocity.angular.x, curr_velocity.angular.y, curr_velocity.angular.z = 0, 0, 0
 
 def turn_and_find():
-	global x
+	global x, move_complete
 	angles = {}
 	sys.stderr.write("Startng Moving\n")
 	move_and_wait("L", 0.5, 90)
 	sys.stderr.write("Resetting and moving again\n")
 	resetter()
 	rospy.sleep(.5)
-	pub2.publish("R .15 180")
+	pub2.publish("R .2 180")
 	sys.stderr.write("Looking for things\n")
+	middle = 320;
 	while not(move_complete):
-		if x[1] == 320.0:
-			sys.stderr.write("ball: "+str(del_r)+"\n")
-			angles['b1'] = del_r
-		if x[2] == 320.0:
-			sys.stderr.write("goal: "+str(del_r)+"\n")
-			angles['g1'] = del_r
-	sys.stderr.write("angles " + str(angles['b1'])+ ", "+str(angles['g1'])+'\n')
+		if (x[1] < middle + 5) and (x[1] > middle - 5):
+			if not angles.has_key('b1'):
+				sys.stderr.write("ball: "+str(del_r[2])+"\n")
+				angles['b1'] = del_r[2]
+		if (x[2] < middle + 5) and (x[2] < middle - 5):
+			if not angles.has_key('g1'): 
+				sys.stderr.write("goal: "+str(del_r[2])+"\n")
+				angles['g1'] = del_r[2]
+	move_complete = False
+	angle1 = angles['b1'] *180.0 / math.pi
+	angle2 = angles['g1']*180.0/math.pi
+	sys.stderr.write("angles (b1,b2): " + str(angle1)+ ", "+str(angle2)+'\n')
+	resetter()
+	rospy.sleep(.5)
+	if angles['b1'] < -math.pi/2:
+		move_and_wait("F", .5, .5)
+	else:
+		move_and_wait("B", .5, .5)
 
+	resetter()
+	rospy.sleep(.5)
+	pub2.publish("L .2 180")
+	sys.stderr.write("Looking for things again\n")
+	while not(move_complete):
+		if (x[1] < middle + 5) and (x[1] > middle - 5):
+			if not angles.has_key('b2'):
+				sys.stderr.write("ball: "+str(del_r[2])+"\n")
+				angles['b2'] = del_r[2]
+		if (x[2] < middle + 5) and (x[2] < middle - 5):
+			if not angles.has_key('g2'): 
+ 				sys.stderr.write("goal: "+str(del_r[2])+"\n")
+				angles['g2'] = del_r[2]
+	move_complete = False
+	angle3 = angles['b2'] * 180.0 / math.pi
+	angle4 = angles['g2'] * 180.0 / math.pi
+	sys.stderr.write("angles (b2, g2): " + str(angle3)+ ", "+str(angle4)+'\n')	
 
 def move_and_wait(direction, speed, distance):
 	global move_complete, SLEEP_TIME

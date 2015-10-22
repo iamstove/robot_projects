@@ -122,13 +122,13 @@ def speed_change(command_type, max_speed, distance):
 	# if we're working with a "negative" command (that which causes our values picked
 	# up from odom to be negative in lin.x or ang.z, we want to reverse
 	# where the final delta should be.
-	if command_type == 'B' or command_type == 'R':	# If the command is a 'negative directioned' one
+	if command_type == 'R':	# If the command is a 'negative directioned' one
 		del_final = -del_final			##Make the final destination negative
 
 	while not_bumping:	# While we haven't collided with anything (in the front at least) ...
 		# change the twist curr_velocity to be a twist representative of the current motion required
 		if command_type == 'F' or command_type == 'B':	# If we're moving forwards or backwards
-			progr = del_x / del_final		##then our level of progress depends on del_x
+			progr = math.fabs(del_x / del_final)		##then our level of progress depends on del_x
 		elif command_type == 'R' or command_type == 'L':# Else if we're going right or left
 			if past_del_r > 0 and del_r < 0:
 				if past_del_r > math.pi / 3: # so not close to zero
@@ -158,7 +158,8 @@ def speed_change(command_type, max_speed, distance):
 		elif command_type == 'L':
 			curr_velocity.angular.z = speed
 
-		#sys.stderr.write('Delr: '+str(del_r)+"\n")
+		#sys.stderr.write('Delr: '+str(progr)+"\n")
+		#progr = math.fabs(progr)
 		if progr >= 1.0:	# If we're at or over 100% of the way there,
 			sys.stderr.write("command completed\n")
 			break
