@@ -62,7 +62,7 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 						area[color_index] += box.area
 					y[color_index] += box.y * box.area
 					x[color_index] += box.x * box.area
-				else: #we consider other boxes of all sizes 
+				else: #we consider other boxes of all sizes
 					if area[color_index] == -1:
 						area[color_index] = box.area
 					else:
@@ -116,7 +116,7 @@ def turn_and_find():
 			#	sys.stderr.write("ball: "+str(del_r[2])+"\n")
 			angles['b1'] = del_r[2]
 		if (x[2] < middle - 5) and (x[2] > middle + 5):
-			#if not angles.has_key('g1'): 
+			#if not angles.has_key('g1'):
 			#	sys.stderr.write("goal: "+str(del_r[2])+"\n")
 			angles['g1'] = del_r[2]
 	move_complete = False
@@ -140,13 +140,17 @@ def turn_and_find():
 			#	sys.stderr.write("ball: "+str(del_r[2])+"\n")
 			angles['b2'] = del_r[2]
 		if (x[2] < middle + 5) and (x[2] > middle - 5):
-			#if not angles.has_key('g2'): 
+			#if not angles.has_key('g2'):
  			#	sys.stderr.write("goal: "+str(del_r[2])+"\n")
 			angles['g2'] = del_r[2]
 	move_complete = False
 	angle3 = angles['b2'] * 180.0 / math.pi
 	angle4 = angles['g2'] * 180.0 / math.pi
-	sys.stderr.write("angles (b2, g2): " + str(angle3)+ ", "+str(angle4)+'\n')	
+	sys.stderr.write("angles (b2, g2): " + str(angle3)+ ", "+str(angle4)+'\n')
+	(final_dist,final_angle)=triangles(angles)
+	move_and_wait("F", .25, final_dist)
+	move_and_wait("L", .25, final_angle)
+	move_and_wait("F", .75, 1)
 
 def move_and_wait(direction, speed, distance):
 	global move_complete, SLEEP_TIME
@@ -155,6 +159,21 @@ def move_and_wait(direction, speed, distance):
 	while not(move_complete):
 		rospy.sleep(SLEEP_TIME)
 	move_complete = False
+
+def triangles(dict):
+	'''this function takes a dictionary of angles in radians and returns a tuple of distance and angle IN DEGREES this allows for
+	direct input in to the moving functions'''
+	x = (.5 * math.tan(dict['g1'])/(math.tan(dict['g2'])-math.tan(dict['g1']))
+	hg = math.tan(dict['g2'])*x
+
+	y = (.5 * math.tan(dict['b1'])/(math.tan(dict['b2'])-math.tan(dict['b1']))
+	hb = math.tan(dict['b2'])*y
+
+	hr = hg-hb
+	lam = math.atan(hr/dict['b1'])
+	w = hb/math.tan(lam)
+	dist = y + w
+	return (dist, lam)
 
 def moveCallback(message):
 	global move_complete
