@@ -19,6 +19,9 @@ pub3 = rospy.Publisher('/mobile_base/commands/reset_odometry', Empty, queue_size
 K_P = 1.5 # K_p in the PID equation
 K_D = 1.25 # K_d in the PID equation
 SLEEP_TIME = 0.1
+color_namelist = ['Greenline', 'Redball', 'Orangegoal']
+x = []
+y = []
 
 color_namelist = ['Greenline', 'Redball', 'Orangegoal'] # We'll use this for indexing different colors.
 
@@ -43,11 +46,13 @@ def resetter():
 	while pub3.get_num_connections() == 0:
 		pass
 	pub3.publish(Empty())
+	rospy.sleep(.5)
 
 def blobsCallback(data): # This is called whenever a blobs message is posted; this happens constnatly even if blobs are not detected
 	global curr_blobweights
 	global has_new_blobinfo
 	global fd
+	global x, y
 	x = [0, 0, 0] # Greenline, Redball, Orangegoal
 	y = [0, 0, 0] # could be generalized but is ok for now
 	area = [-1, -1, -1]
@@ -55,12 +60,21 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 		for box in data.blobs:
 			if box.name in color_namelist:
 				color_index = color_namelist.index(box.name)
-				if area[color_index] == -1:
-					area[color_index] = box.area
-				else:
-					area[color_index] += box.area
-				y[color_index] += box.y * box.area
-				x[color_index] += box.x * box.area
+				if color_index == color_namelist.index('Orangegoal') and box.area > 5000: #we only consider goal boxes that are BIG
+					#sys.stderr.write(str(color_index)+" - " +str(box.area) + " \n")
+					if area[color_index] == -1:
+						area[color_index] = box.area
+					else:
+						area[color_index] += box.area
+					y[color_index] += box.y * box.area
+					x[color_index] += box.x * box.area
+				else: #we consider other boxes of all sizes
+					if area[color_index] == -1:
+						area[color_index] = box.area
+					else:
+						area[color_index] += box.area
+					y[color_index] += box.y * box.area
+					x[color_index] += box.x * box.area
 			else:
 				fd.write("Unidentified or irrelevant color: " + box.name + "\n")
 
@@ -145,7 +159,7 @@ def follow_the_line():
 
 	# Now we're done with the line, so we need to look for the ball
 
-def play_ball():
+'''def play_ball():
 	# We first want to declare our dependency upon the global blob area.
 	global curr_blobweights # Note well that this is effectively all blobsCallback changes when it runs.
 	# We will simulate nodelike behavior by looping until a flag has_new_blobinfo is set.
@@ -157,6 +171,7 @@ def play_ball():
 	### NEEDS: TURN -PI/2 RAD ###
 	sys.stderr.write("Startng Moving\n")
 	#move_and_wait("L", 0.5, 90)
+    pub2.publish("L .5 90")
 	sys.stderr.write("Finished moving\n")
 	### THEN, WE SEARCH ###
 
@@ -241,16 +256,92 @@ def scan(itemsFound):
 				found = "goal"
 				return found
 		count += 1
-	return None
+	return None'''
 
+def turn_and_find():
+	global x, move_complete
+	angles = {}
+	maxgoal = -1
+	sys.stderr.write("Startng Moving\n")
+	move_and_wait("L", 0.5, 90)
+	sys.stderr.write("Resetting and moving again\n")
+	pub2.publish("R .2 180")
+	sys.stderr.write("Looking for things\n")
+	middle = 320;
+	while not(move_complete):
+		if (x[1] < middle + 5) and (x[1] > middle - 5):
+			#if not angles.has_key('b1'):
+			#	sys.stderr.write("ball: "+str(del_r[2])+"\n")
+			angles['b1'] = del_r[2]
+		if (x[2] < middle - 5) and (x[2] > middle + 5):
+			#if not angles.has_key('g1'):
+			#	sys.stderr.write("goal: "+str(del_r[2])+"\n")
+			#if maxgoal < area[2]: #we only want the center of the biggest goal we find
+			angles['g1'] = del_r[2]
+	move_complete = False
+	angle1 = angles['b1'] *180.0 / math.pi
+	angle2 = angles['g1']*180.0/math.pi
+	sys.stderr.write("angles (b1,b2): " + str(angle1)+ ", "+str(angle2)+'\n')
+	resetter()
+	if angles['b1'] < -math.pi/2:
+		move_and_wait("F", .5, .5)
+	else:
+		move_and_wait("B", .5, .5)
 
+	move_and_wait("L", .5 ,180)
+	pub2.publish("R .2 180")
+	sys.stderr.write("Looking for things again\n")
+	maxgoal = -1 #we'll have a new biggest
+	while not(move_complete):
+		if (x[1] < middle + 5) and (x[1] > middle - 5):
+			#if not angles.has_key('b2'):
+			#	sys.stderr.write("ball: "+str(del_r[2])+"\n")
+			angles['b2'] = del_r[2]
+		if (x[2] < middle + 5) and (x[2] > middle - 5):
+			#if not angles.has_key('g2'):
+				#	sys.stderr.write("goal: "+str(del_r[2])+"\n")
+			#if maxgoal < area[2]: #we only want the center of the biggest goal we find
+			angles['g2'] = del_r[2]
+	move_complete = False
+	angle3 = angles['b2'] * 180.0 / math.pi
+	angle4 = angles['g2'] * 180.0 / math.pi
+	resetter()
+	sys.stderr.write("angles (b2, g2): " + str(angle3)+ ", "+str(angle4)+'\n')
+	(final_dist,final_angle)=triangles(angles)
+	if final_dist > 0:
+		final_dist = math.fabs(final_dist)
+		move_and_wait("F", .25, final_dist)
+	else:
+		final_dist = math.fabs(final_dist)
+		move_and_wait("B", .25, final_dist)
+	move_and_wait("L", .25, final_angle)
+	move_and_wait("F", .75, 1)
 
 def move_and_wait(direction, speed, distance):
-	global move_complete
+	global move_complete, SLEEP_TIME
 	move_complete = False
 	pub2.publish(direction + " " + repr(speed) + " " + str(distance))
 	while not(move_complete):
 		rospy.sleep(SLEEP_TIME)
+	move_complete = False
+	resetter()
+
+def triangles(dict):
+	'''this function takes a dictionary of angles in radians and returns a tuple of distance and angle IN DEGREES this allows
+	for direct input in to the moving functions'''
+	x = (.5 * math.tan(dict['g1']))/(math.tan(dict['g2'])-math.tan(dict['g1']))
+	height_g = (math.tan(dict['g2'])*x)
+
+	y = (.5 * math.tan(dict['b1']))/(math.tan(dict['b2'])-math.tan(dict['b1']))
+	height_b = math.tan(dict['b2'])*y
+
+	hr = height_g-height_b
+	lam = math.atan(hr/dict['b1'])
+	w = height_b/math.tan(lam)
+	dist = y + w
+	lam = math.degrees(lam)
+	sys.stderr.write("(Dist, lam): "+str(dist)+" "+str(lam)+"\n")
+	return (dist, lam)
 
 def moveCallback(message):
 	global move_complete
@@ -267,7 +358,7 @@ def play_game():
 	follow_the_line()
 	resetter()
 	sys.stderr.write("End of the line\nPlaying ball\n")
-	play_ball()
+	turn_and_find()
 
 	fd.close()
 
