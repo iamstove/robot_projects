@@ -55,7 +55,7 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 		for box in data.blobs:
 			if box.name in color_namelist:
 				color_index = color_namelist.index(box.name)
-				if color_index == color_namelist.index('Orangegoal') and box.area > 1000: #we only consider goal boxes that are BIG
+				if color_index == color_namelist.index('Orangegoal') and box.area > 5000: #we only consider goal boxes that are BIG
 					#sys.stderr.write(str(color_index)+" - " +str(box.area) + " \n")
 					if area[color_index] == -1:
 						area[color_index] = box.area
@@ -118,8 +118,8 @@ def turn_and_find():
 		if (x[2] < middle - 5) and (x[2] > middle + 5):
 			#if not angles.has_key('g1'):
 			#	sys.stderr.write("goal: "+str(del_r[2])+"\n")
-			if maxgoal < area[2]: #we only want the center of the biggest goal we find
-				angles['g1'] = del_r[2]
+			#if maxgoal < area[2]: #we only want the center of the biggest goal we find
+			angles['g1'] = del_r[2]
 	move_complete = False
 	angle1 = angles['b1'] *180.0 / math.pi
 	angle2 = angles['g1']*180.0/math.pi
@@ -142,8 +142,8 @@ def turn_and_find():
 		if (x[2] < middle + 5) and (x[2] > middle - 5):
 			#if not angles.has_key('g2'):
  			#	sys.stderr.write("goal: "+str(del_r[2])+"\n")
-			if maxgoal < area[2]: #we only want the center of the biggest goal we find
-				angles['g2'] = del_r[2]
+			#if maxgoal < area[2]: #we only want the center of the biggest goal we find
+			angles['g2'] = del_r[2]
 	move_complete = False
 	angle3 = angles['b2'] * 180.0 / math.pi
 	angle4 = angles['g2'] * 180.0 / math.pi
