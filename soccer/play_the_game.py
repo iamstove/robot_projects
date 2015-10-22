@@ -336,7 +336,7 @@ def triangles(dict):
 	height_b = math.tan(dict['b2'])*y
 
 	hr = height_g-height_b
-	lam = math.atan(hr/dict['b1'])
+	lam = math.atan(hr/(y-x))
 	w = height_b/math.tan(lam)
 	dist = y + w
 	lam = math.degrees(lam)
