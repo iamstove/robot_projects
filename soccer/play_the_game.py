@@ -283,7 +283,7 @@ def turn_and_find():
 	angle2 = angles['g1']*180.0/math.pi
 	sys.stderr.write("angles (b1,b2): " + str(angle1)+ ", "+str(angle2)+'\n')
 	resetter()
-	if angles['b1'] < -math.pi/2:
+	if angles['b1'] > angles['g1']:
 		move_and_wait("F", .5, .5)
 	else:
 		move_and_wait("B", .5, .5)
