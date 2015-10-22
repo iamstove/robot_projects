@@ -149,10 +149,10 @@ def speed_change(command_type, max_speed, distance):
 		#speed = math.sqrt(max(spd_min*spd_min, (1.0 - math.fabs(1.0 - 2.0*progr)) * maxim * maxim))
 		speed = min(math.sqrt(max(spd_min*spd_min, acc_max*math.fabs(del_final - del_final*math.fabs(1 - 2.0*progr)))), maxim)
 		#sys.stderr.write('Speed: ' +str(speed)+"\n")
-		if command_type == 'B' or del_final < 0:
-			curr_velocity.linear.x = -speed
-		elif command_type == 'F':
+		if command_type == 'F':
 			curr_velocity.linear.x = speed
+		elif command_type == 'B':
+			curr_velocity.linear.x = -speed
 		elif command_type == 'R':
 			curr_velocity.angular.z = -speed
 		elif command_type == 'L':
