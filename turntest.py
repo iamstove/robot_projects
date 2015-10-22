@@ -150,7 +150,12 @@ def turn_and_find():
 	resetter()
 	sys.stderr.write("angles (b2, g2): " + str(angle3)+ ", "+str(angle4)+'\n')
 	(final_dist,final_angle)=triangles(angles)
-	move_and_wait("F", .25, final_dist)
+	if final_dist > 0:
+		final_dist = math.fabs(final_dist)
+		move_and_wait("F", .25, final_dist)
+	else:
+		final_dist = math.fabs(final_dist)
+		move_and_wait("B", .25, final_dist)
 	move_and_wait("L", .25, final_angle)
 	move_and_wait("F", .75, 1)
 
