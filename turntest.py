@@ -177,6 +177,7 @@ def triangles(dict):
 	w = height_b/math.tan(lam)
 	dist = y + w
 	lam = math.degrees(lam)
+	sys.stderr.write("(Dist, lam): "str(dist)+" "+str(lam)+"\n")
 	return (dist, lam)
 
 def moveCallback(message):
