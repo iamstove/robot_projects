@@ -12,6 +12,7 @@ from std_msgs.msg import String
 
 pub = rospy.Publisher('kobuki_command', Twist, queue_size=10)
 pub2 = rospy.Publisher('subcontrol', String, queue_size=10)
+reverse = {'F': 'B', 'B': 'F', 'R': 'L', 'L': 'R'}
 
 def twist_init():
 	global curr_velocity
@@ -33,10 +34,15 @@ def parse_command(data):
 		c = c.lstrip().rstrip()
 		#split c into a triple that contains the following things
 		command_type, max_speed, distance = c.split(' ')
-		speed_change(command_type[0].upper(), float(max_speed), float(distance))
+		if distance < 0: 
+			# Fek off m8
+			speed_change(reverse[command_type[0:1].upper()], float(max_speed), -float(distance))
+		else:	
+			speed_change(command_type[0].upper(), float(max_speed), float(distance))
 		resetter()
 		rospy.sleep(0.25)
 
+	resetter()
 		#the split command in this case should always have 3 parts
 		#print ('Split command:' + str((command_type, max_speed, distance)))
 
@@ -48,7 +54,7 @@ def odomCallback(data):
 	global q_0
 	global r_0
 
-	if True == odom_reset:
+	if odom_reset:
 		q_0 = [data.pose.pose.orientation.x,
 	           data.pose.pose.orientation.y,
 	           data.pose.pose.orientation.z,
@@ -88,7 +94,7 @@ def speed_change(command_type, max_speed, distance):
 	global del_r
 
 	lin_min = 0.03
-	rot_min = 0.5
+	rot_min = 0.2
 	lin_max = 1
 	rot_max = 2
 	progr = 0
@@ -120,9 +126,9 @@ def speed_change(command_type, max_speed, distance):
 		spd_min = lin_min	##so we should be using the linear minimum speed
 		acc_max = lin_max
 	# if we're working with a "negative" command (that which causes our values picked
-	# up from odom to be negative in lin.x or ang.z, we want to reverse
+	# up from odom to be negative in lin.x or ang.z, we want `to reverse
 	# where the final delta should be.
-	if command_type == 'R':	# If the command is a 'negative directioned' one
+	if command_type == 'R' or command_type == 'B':	# If the command is a 'negative directioned' one
 		del_final = -del_final			##Make the final destination negative
 
 	while not_bumping:	# While we haven't collided with anything (in the front at least) ...
@@ -138,7 +144,7 @@ def speed_change(command_type, max_speed, distance):
 					turns -= 1
 			#del_final = del_final * math.pi / 180.0 <you, you fucking piece of shit, why did you change
 			past_del_r = del_r
-			progr = (del_r + turns * 2 * math.pi) / del_final ##current rotation * number of turns * 2 * pi / final
+			progr = del_r / del_final ##current rotation * number of turns * 2 * pi / final
 			#sys.stderr.write("numerator: "+str(del_r + turns * 2 * math.pi)+"\n")
 			#sys.stderr.write("denum: "+str(del_final)+"\n")
 			#sys.stderr.write('Progress: ' +str(progr)+"\n")
