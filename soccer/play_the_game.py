@@ -61,7 +61,7 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 			if box.name in color_namelist:
 				color_index = color_namelist.index(box.name)
 				if color_index == color_namelist.index('Orangegoal') and box.area > 5000: #we only consider goal boxes that are BIG
-					#sys.stderr.write(str(color_index)+" - " +str(box.area) + " \n")
+					#fd.write(str(color_index)+" - " +str(box.area) + " \n")
 					if area[color_index] == -1:
 						area[color_index] = box.area
 					else:
@@ -148,7 +148,7 @@ def follow_the_line():
 		else: # decide whether to stay still or keep up hope
 			hope -= 1
 			curr_velocity.linear.x -= .01
-			#sys.stderr.write(str(hope)+"\n")
+			#fd.write(str(hope)+"\n")
 			if hope < 0:
 				not_done_with_line = False # We're not NOT done with it ...
 				#print("Staying!!")
@@ -167,12 +167,13 @@ def follow_the_line():
 
 	global del_x
 	global del_r
-
+	global fd
+	
 	### NEEDS: TURN -PI/2 RAD ###
-	sys.stderr.write("Startng Moving\n")
+	fd.write("Startng Moving\n")
 	#move_and_wait("L", 0.5, 90)
     pub2.publish("L .5 90")
-	sys.stderr.write("Finished moving\n")
+	fd.write("Finished moving\n")
 	### THEN, WE SEARCH ###
 
 	not_done_with_search = True # We begin our search now, in fact
@@ -350,6 +351,7 @@ def moveCallback(message):
 def play_game():
 	global fd
 	fd = open("roserrlog.txt", "w")
+	
 	init_all() # Initialize everything (includes initialization of the twist for current motion)
 	rospy.init_node('soccer_player', anonymous = True) # Initialize this node
 	rospy.Subscriber('/blobs', Blobs, blobsCallback)
@@ -357,7 +359,8 @@ def play_game():
 	rospy.Subscriber('subcontrol', String, moveCallback)
 	follow_the_line()
 	resetter()
-	sys.stderr.write("End of the line\nPlaying ball\n")
+	
+	fd.write("End of the line\nPlaying ball\n")
 	rospy.sleep(3) #time to turn the lid up
 	turn_and_find()
 
