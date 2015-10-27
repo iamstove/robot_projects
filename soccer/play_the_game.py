@@ -19,7 +19,6 @@ pub3 = rospy.Publisher('/mobile_base/commands/reset_odometry', Empty, queue_size
 K_P = 1.5 # K_p in the PID equation
 K_D = 1.25 # K_d in the PID equation
 SLEEP_TIME = 0.1
-color_namelist = ['Greenline', 'Redball', 'Orangegoal']
 x = []
 y = []
 
@@ -119,18 +118,19 @@ def follow_the_line():
 	### a green blob for 10 new sets of blobs.	This trigger activates with changes in not_done_with_line
 	not_done_with_line = True
 
-	hope = 0 # The amount of hope we have at this point in time that we're on the line
-
 	# The loop will incorporate a wait that waits 1/10 the time we waited to get the blob the last time.
 	### This is so the program doesn't consume huge CPU.
 	time_waited = 0 # We don't have to wait at all to try the first time.
-	time_last = time.clock() # Start the time so we know when we started later.
-
+	curr_time = time.clock()
+	time_last = curr_time # Start the time so we know when we started later.
+	last_line = curr_time # The last time we assume to have seen a line is now.
+	
 	while not_done_with_line:
 		while not(has_new_blobinfo):
 			rospy.sleep(max(time_waited / 10, SLEEP_TIME / 10)) # Sleep for a bit.  Maybe?
-		time_waited = time.clock() - time_last # Get the difference now
-		time_last = time.clock() # Reset the time
+		curr_time = time.clock() # Just get it so we don't ask for the time so many times
+		time_waited = curr_time - time_last # Get the difference now
+		time_last = curr_time # Reset the time
 		has_new_blobinfo = False
 		# Now we have_new_blobinfo, so let's process.
 
@@ -138,24 +138,18 @@ def follow_the_line():
 		if blobloc != -1: # If it hasn't been sentinelized
 			blobloc = (320.0 - blobloc) / 320.0
 			curr_velocity.angular.z = K_P * blobloc + K_D * (blobloc - pastloc)
-			#print(curr_velocity.angular.z)
 			curr_velocity.linear.x = 0.2
-			pastloc = blobloc
-			#print("going!!")
 			pub.publish(curr_velocity)
-			#hope = 20  We're hopeful that we'll continue to see the line
+			
+			pastloc = blobloc
+			last_line = curr_time
 
 		else: # decide whether to stay still or keep up hope
-			hope -= 1
-			curr_velocity.linear.x -= .01
-			#fd.write(str(hope)+"\n")
-			if hope < 0:
-				not_done_with_line = False # We're not NOT done with it ...
-				#print("Staying!!")
-				twist_init()
-				pub.publish(curr_velocity)
-			# else:
-				# We've still got hope!!!
+			curr_velocity.linear.x = max(0.0, 0.2 * (1.0 - curr_time + last_line)) # 1s of linelessness to stop
+			if curr_time - last_line >= 3.0: 	# If we haven't seen the line for three seconds
+				not_done_with_line = False 	# We're probably done with it, so we're not not done with the line.
+				twist_init()			# reinit the twist to stop the bot
+				pub.publish(curr_velocity)	# and publish that twist so the bot knows how fast not to go.
 
 	# Now we're done with the line, so we need to look for the ball
 
