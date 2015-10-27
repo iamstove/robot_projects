@@ -17,8 +17,8 @@ pub2 = rospy.Publisher('keyboard_command', String, queue_size = 10) #publish to 
 pub3 = rospy.Publisher('/mobile_base/commands/reset_odometry', Empty, queue_size=10)
 SLEEP_TIME = .05
 color_namelist = ['Greenline', 'Redball', 'Orangegoal']
-x = []
-y = []
+#x = []
+#y = []
 
 def resetter():
 	global del_x
@@ -55,7 +55,7 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 		for box in data.blobs:
 			if box.name in color_namelist:
 				color_index = color_namelist.index(box.name)
-				if color_index == color_namelist.index('Orangegoal') and box.area > 5000: #we only consider goal boxes that are BIG
+				if color_index == color_namelist.index('Orangegoal') and box.area > 1000: #we only consider goal boxes that are BIG
 					#sys.stderr.write(str(color_index)+" - " +str(box.area) + " \n")
 					if area[color_index] == -1:
 						area[color_index] = box.area
@@ -102,12 +102,13 @@ def twist_init():
 
 def turn_and_find():
 	global x, move_complete
+	orientation = 0
 	angles = {}
-	maxgoal = -1
 	sys.stderr.write("Startng Moving\n")
-	move_and_wait("L", 0.5, 90)
+	move_and_wait("L", 1, 90)
 	sys.stderr.write("Resetting and moving again\n")
-	pub2.publish("R .2 180")
+	move_complete = False
+	pub2.publish("R 0.15 180")
 	sys.stderr.write("Looking for things\n")
 	middle = 320;
 	while not(move_complete):
@@ -120,35 +121,64 @@ def turn_and_find():
 			#	sys.stderr.write("goal: "+str(del_r[2])+"\n")
 			#if maxgoal < area[2]: #we only want the center of the biggest goal we find
 			angles['g1'] = del_r[2]
-	move_complete = False
-	angle1 = angles['b1'] *180.0 / math.pi
-	angle2 = angles['g1']*180.0/math.pi
+	angle1 = angles['b1'] * 180.0 / math.pi 
+	angle2 = angles['g1'] * 180.0 / math.pi
 	sys.stderr.write("angles (b1,b2): " + str(angle1)+ ", "+str(angle2)+'\n')
-	resetter()
-	if angles['b1'] < -math.pi/2:
-		move_and_wait("F", .5, .5)
+	#resetter()
+	if angles['b1'] < 0: 
+		orientation = -1
 	else:
-		move_and_wait("B", .5, .5)
+		orientation = 1
+	
+	if orientation == 1:
+		move_and_wait("L", 1.0, 180)
+		move_and_wait("B", .25, .5)
+	else:
+		move_and_wait("B", .25, .5)
+	
+	
+	# Now we're in position two. Turn and record.
+	
+	move_complete = False
+	
+	if orientation == -1:
+		pub2.publish("L .15 180")
+	else:
+		pub2.publish("R .15 180")
 
-	move_and_wait("L", .5 ,180)
-	pub2.publish("R .2 180")
 	sys.stderr.write("Looking for things again\n")
-	maxgoal = -1 #we'll have a new biggest
+	
 	while not(move_complete):
 		if (x[1] < middle + 5) and (x[1] > middle - 5):
 			#if not angles.has_key('b2'):
 			#	sys.stderr.write("ball: "+str(del_r[2])+"\n")
-			angles['b2'] = del_r[2]
+			angles['b2'] = ((orientation + 1) / 2 * math.pi) - del_r[2] * orientation
 		if (x[2] < middle + 5) and (x[2] > middle - 5):
 			#if not angles.has_key('g2'):
  			#	sys.stderr.write("goal: "+str(del_r[2])+"\n")
 			#if maxgoal < area[2]: #we only want the center of the biggest goal we find
-			angles['g2'] = del_r[2]
-	move_complete = False
+			angles['g2'] = ((orientation + 1) / 2 * math.pi) - del_r[2] * orientation
+	
 	angle3 = angles['b2'] * 180.0 / math.pi
 	angle4 = angles['g2'] * 180.0 / math.pi
-	resetter()
+	#resetter()
 	sys.stderr.write("angles (b2, g2): " + str(angle3)+ ", "+str(angle4)+'\n')
+	
+	g1 = 0.5 * math.sin(angles['g2']) / math.sin(angles['g2'] - angles['g1'])
+	b1 = 0.5 * math.sin(angles['b2']) / math.sin(angles['b2'] - angles['b1'])
+	rise_over_run = (g1 * math.cos(angles['g1']) - b1 * math.cos(angles['b1'])) / (g1 * math.sin(angles['g1']) - b1 * math.sin(angles['b1']))
+
+	del_m_x = g1 * math.sin(angles['g1']) * rise_over_run - 0.5
+	
+	move_and_wait("F", 0.25, del_m_x)
+	
+	ang_m = math.atan(rise_over_run)
+	
+	move_and_wait("L", 0.5, (180 - ang_m) * orientation)
+
+	move_and_wait("F", 1, 1)
+	
+	'''
 	(final_dist,final_angle)=triangles(angles)
 	if final_dist > 0:
 		final_dist = math.fabs(final_dist)
@@ -156,8 +186,9 @@ def turn_and_find():
 	else:
 		final_dist = math.fabs(final_dist)
 		move_and_wait("B", .25, final_dist)
-	move_and_wait("L", .25, final_angle)
-	move_and_wait("F", .75, 1)
+	final_angle = 180-final_angle
+	move_and_wait("r", .25, final_angle)
+	move_and_wait("F", .75, 1)'''
 
 def move_and_wait(direction, speed, distance):
 	global move_complete, SLEEP_TIME
@@ -165,7 +196,6 @@ def move_and_wait(direction, speed, distance):
 	pub2.publish(direction + " " + repr(speed) + " " + str(distance))
 	while not(move_complete):
 		rospy.sleep(SLEEP_TIME)
-	move_complete = False
 	resetter()
 
 def triangles(dict):
