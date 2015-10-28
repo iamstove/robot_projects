@@ -55,7 +55,7 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 		for box in data.blobs:
 			if box.name in color_namelist:
 				color_index = color_namelist.index(box.name)
-				if color_index == color_namelist.index('Orangegoal') and box.area > 5000: #we only consider goal boxes that are BIG
+				if color_index == color_namelist.index('Orangegoal') and box.area > 4000: #we only consider goal boxes that are BIG
 					#sys.stderr.write(str(color_index)+" - " +str(box.area) + " \n")
 					if area[color_index] == -1:
 						area[color_index] = box.area
@@ -130,7 +130,7 @@ def turn_and_find():
 	else:
 		move_and_wait("B", .5, .5)
 
-	move_and_wait("L", .5 ,180)
+	move_and_wait("L", .4 ,180)
 	pub2.publish("R .2 180")
 	sys.stderr.write("Looking for things again\n")
 	while not(move_complete):
