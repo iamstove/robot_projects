@@ -181,7 +181,7 @@ def triangles(dict):
 	w = height_b/math.tan(lam)
 	dist = y + w
 	lam = math.fabs(math.degrees(lam))
-	bdist = math.fabs(math.sqrt(w**2 + hb**2))
+	bdist = math.fabs(math.sqrt(w**2 + height_b**2))
 	sys.stderr.write("(Dist, lam, bdist): "+str(dist)+" "+str(lam)+ str(bdist) +"\n")
 	bdist += .2
 	return (dist, lam, bdist)
