@@ -159,105 +159,6 @@ def follow_the_line():
 
 	# Now we're done with the line, so we need to look for the ball
 
-'''def play_ball():
-	# We first want to declare our dependency upon the global blob area.
-	global curr_blobweights # Note well that this is effectively all blobsCallback changes when it runs.
-	# We will simulate nodelike behavior by looping until a flag has_new_blobinfo is set.
-	global has_new_blobinfo
-
-	global del_x
-	global del_r
-
-	### NEEDS: TURN -PI/2 RAD ###
-	sys.stderr.write("Startng Moving\n")
-	#move_and_wait("L", 0.5, 90)
-    pub2.publish("L .5 90")
-	sys.stderr.write("Finished moving\n")
-	### THEN, WE SEARCH ###
-
-	not_done_with_search = True # We begin our search now, in fact
-
-	hope = 0 # The amount of hope we have at this point in time that we're seeing the ball
-
-	time_waited = 0 # We don't have to wait at all to try the first time.
-	time_last = time.clock() # Start the time so we know when we started later.
-
-	itemsFound = []
-	pos1Dict = {}
-	while not_done_with_search:
-		itemsFound.append(scan(itemsFound)) # Will turn until it spots something, then control will continue
-		lock_on(itemsFound[0]) # Will out of bounds error if no item is found in the end
-		pos1Dict[itemsFound[0]] = del_r[2]
-		itemsFound.append(scan(itemsFound))
-		lock_on(itemFound[1])
-		pos1Dict[itemsFound[1]] = del_r[2]
-
-
-def lock_on(item_found):
-	global curr_blobweights
-	global has_new_blobinfo
-	global del_x
-	global del_r
-
-	if "ball" == item_found:
-		itemindex = 1
-	elif "goal" == item_found:
-		itemindex = 2
-	else:
-		return # ruh roh
-
-	count = 0
-	hope = 0
-
-	while count < 1000:
-		while not(has_new_blobinfo):
-			rospy.sleep(SLEEP_TIME / 10) # Sleep for a bit.  Maybe?
-		# Now we have_new_blobinfo, so let's process.
-
-		blobloc = curr_blobweights[0][itemindex]
-
-		if blobloc != -1: # If it hasn't been sentinelized
-			blobloc = (320.0 - blobloc) / 320.0
-			curr_velocity.angular.z = K_P * blobloc
-			hope += 1.0/(1000.0*blobloc**2)
-			pub.publish(curr_velocity)
-			if hope > 100:
-				return True
-		else: # decide whether to stay still or keep up hope
-			hope -= 1
-			if hope < 0:
-				twist_init()
-				pub.publish(curr_velocity)
-		count += 1
-	return False
-
-def scan(itemsFound):
-	global curr_blobweights
-	global has_new_blobinfo
-
-	count = 0
-
-	while count < 1000:
-		while not(has_new_blobinfo):
-			rospy.sleep(SLEEP_TIME / 10) # Sleep for a bit.  Maybe?
-		# Now we have_new_blobinfo, so let's process.
-
-		ballloc = curr_blobweights[0][1] # 0 is x, and then 1 is, in the color list, the index for Redball
-		goalloc = curr_blobweights[0][2] # yada yada 2 is Orangegoal
-
-		if ("ball" in itemsFound or ballloc == -1) and ("goal" in itemsFound or goalloc == -1): # If it HAS been sentinelized or we don't care about it either way,
-			curr_velocity.angular.z = -0.1
-			pub.publish(curr_velocity)
-		else: # We do see something, so ...
-			if not("ball" in itemsFound) and ballloc != -1:
-				found = "ball"
-				return found
-			elif not("goal" in itemsFound) and goalloc != -1:
-				found = "goal"
-				return found
-		count += 1
-	return None'''
-
 def turn_and_find():
 	global x, move_complete
 	angles = {}
@@ -311,6 +212,7 @@ def turn_and_find():
 	if final_dist > 0:
 		final_dist = math.fabs(final_dist)
 		move_and_wait("F", .25, final_dist)
+		final_angle = 180 - final_angle
 	else:
 		final_dist = math.fabs(final_dist)
 		move_and_wait("B", .25, final_dist)
