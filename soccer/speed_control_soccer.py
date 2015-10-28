@@ -26,7 +26,7 @@ def twist_init():
 
 def parse_command(data):
 	command_list = data.data.split(',')
-	sys.stderr.write('List of commands: ' + str(command_list)+'\n')
+	#sys.stderr.write('List of commands: ' + str(command_list)+'\n')
 	#for each command in command list, split it up and send it to the accelerator program
 	for c in command_list:
 		#print ("Command: " + str(c))
