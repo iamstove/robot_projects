@@ -9,10 +9,10 @@ from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion
 from cmvision.msg import Blobs, Blob
 from std_msgs.msg import Empty, String
-import time #itself!  WAUUUGHAHAHAHAHHAAAAA
+import time
 
 #Globals#
-pub = rospy.Publisher('kobuki_command', Twist, queue_size = 10) # Command publisher
+pub = rospy.Publisher('kobuki_command', Twist, queue_size = 10) # Command publisher, this is never used?
 pub2 = rospy.Publisher('keyboard_command', String, queue_size = 10) #publish to speed control, makes scanning turns easier
 pub3 = rospy.Publisher('/mobile_base/commands/reset_odometry', Empty, queue_size=10)
 SLEEP_TIME = .05
@@ -105,40 +105,40 @@ def turn_and_find():
 	angles = {}
 	while pub2.get_num_connections() == 0:
 		pass
-	sys.stderr.write("Startng Moving\n")
-	move_and_wait("L", 0.5, 90)
-	sys.stderr.write("Resetting and moving again\n")
+	#sys.stderr.write("Startng Moving\n")
+	move_and_wait("L", 0.4, 90)
+	#sys.stderr.write("Resetting and moving again\n")
 	pub2.publish("R .125 180")
-	sys.stderr.write("Looking for things\n")
+	#sys.stderr.write("Looking for things\n")
 	middle = 320;
 	while not(move_complete):
-		if (curr_blobweights[0][1] < middle + 5) and (curr_blobweights[0][1] > middle - 5):
+		if (curr_blobweights[0][1] < middle + 4) and (curr_blobweights[0][1] > middle - 4):
 			if not angles.has_key('b1'):
 				sys.stderr.write("ball: "+str(math.degrees(del_r[2]))+"\n")
 				angles['b1'] = math.fabs(del_r[2])
-		if (curr_blobweights[0][2] < middle - 5) and (curr_blobweights[0][2] > middle + 5):
+		if (curr_blobweights[0][2] < middle + 4) and (curr_blobweights[0][2] > middle - 4):
 			if not angles.has_key('g1'):
 				sys.stderr.write("goal: "+str(math.degrees(del_r[2]))+"\n")
 				angles['g1'] = math.fabs(del_r[2])
 	move_complete = False
 	angle1 = angles['b1'] * 180.0 / math.pi
 	angle2 = angles['g1'] * 180.0 / math.pi
-	sys.stderr.write("angles (b1,b2): " + str(angle1)+ ", "+str(angle2)+'\n')
+	#sys.stderr.write("angles (b1,b2): " + str(angle1)+ ", "+str(angle2)+'\n')
 	resetter()
 	if angles['b1'] > angles['g1']:
-		move_and_wait("F", .5, .5)
+		move_and_wait("F", .4, .5)
 	else:
-		move_and_wait("B", .5, .5)
+		move_and_wait("B", .4, .5)
 
-	move_and_wait("L", .4 ,180)
+	move_and_wait("L", .35 ,180)
 	pub2.publish("R .125 180")
-	sys.stderr.write("Looking for things again\n")
+	#sys.stderr.write("Looking for things again\n")
 	while not(move_complete):
-		if (curr_blobweights[0][1] < middle + 5) and (curr_blobweights[0][1] > middle - 5):
+		if (curr_blobweights[0][1] < middle + 4) and (curr_blobweights[0][1] > middle - 4):
 			if not angles.has_key('b2'):
 				sys.stderr.write("ball: "+str(math.degrees(del_r[2]))+"\n")
 				angles['b2'] = math.fabs(del_r[2])
-		if (curr_blobweights[0][2] < middle + 5) and (curr_blobweights[0][2] > middle - 5):
+		if (curr_blobweights[0][2] < middle + 4) and (curr_blobweights[0][2] > middle - 4):
 			if not angles.has_key('g2'):
  				sys.stderr.write("goal: "+str(math.degrees(del_r[2]))+"\n")
 				angles['g2'] = math.fabs(del_r[2])
@@ -146,7 +146,7 @@ def turn_and_find():
 	angle3 = angles['b2'] * 180.0 / math.pi
 	angle4 = angles['g2'] * 180.0 / math.pi
 	resetter()
-	sys.stderr.write("angles (b2, g2): " + str(angle3)+ ", "+str(angle4)+'\n')
+	#sys.stderr.write("angles (b2, g2): " + str(angle3)+ ", "+str(angle4)+'\n')
 	(final_dist,final_angle, drivedist)=triangles(angles)
 	if final_dist > 0:
 		final_dist = math.fabs(final_dist)
