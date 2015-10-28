@@ -55,7 +55,7 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 		for box in data.blobs:
 			if box.name in color_namelist:
 				color_index = color_namelist.index(box.name)
-				if color_index == color_namelist.index('Orangegoal') and box.area > 3500: #we only consider goal boxes that are BIG
+				if color_index == color_namelist.index('Orangegoal') and box.area > 0: #we only consider goal boxes that are BIG
 					#sys.stderr.write(str(color_index)+" - " +str(box.area) + " \n")
 					if area[color_index] == -1:
 						area[color_index] = box.area
