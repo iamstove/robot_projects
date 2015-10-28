@@ -123,7 +123,7 @@ def turn_and_find():
 	move_complete = False
 	angle1 = angles['b1'] * 180.0 / math.pi
 	angle2 = angles['g1'] * 180.0 / math.pi
-	sys.stderr.write("angles (b1,b2): " + str(angle1)+ ", "+str(angle2)+'\n')
+	sys.stderr.write("angles (b1,g1): " + str(angle1)+ ", "+str(angle2)+'\n')
 	resetter()
 	if angles['b1'] > angles['g1']:
 		move_and_wait("F", .4, .5)
@@ -170,16 +170,22 @@ def move_and_wait(direction, speed, distance):
 def triangles(dict):
 	'''this function takes a dictionary of angles in radians and returns a tuple of distance and angle IN DEGREES this allows
 	for direct input in to the moving functions'''
-	x = (.5 * math.tan(dict['g1']))/(math.tan(dict['g2'])-math.tan(dict['g1']))
+	factor = .5 #this is the distance we travel
+	if dict['b1'] > dict['g1']: #determines whether we moved backwards or forwards, allowing us to move the correct way the second time
+		sign = 1
+	else:
+		sign = -1
+	x = (factor * math.tan(dict['g1']))/(math.tan(dict['g2'])-math.tan(dict['g1']))
 	height_g = (math.tan(dict['g2'])*x)
 
-	y = (.5 * math.tan(dict['b1']))/(math.tan(dict['b2'])-math.tan(dict['b1']))
+	y = (factor * math.tan(dict['b1']))/(math.tan(dict['b2'])-math.tan(dict['b1']))
 	height_b = math.tan(dict['b2'])*y
 
 	hr = height_g-height_b
 	lam = math.atan(hr/(y-x))
 	w = height_b/math.tan(lam)
 	dist = y + w
+	dist *= sign
 	lam = math.fabs(math.degrees(lam))
 	bdist = math.fabs(math.sqrt(w**2 + height_b**2))
 	sys.stderr.write("(Dist, lam, bdist): "+str(dist)+" "+str(lam)+ str(bdist) +"\n")
