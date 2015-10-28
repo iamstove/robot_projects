@@ -113,13 +113,13 @@ def turn_and_find():
 	middle = 320;
 	while not(move_complete):
 		if (curr_blobweights[0][1] < middle + 4) and (curr_blobweights[0][1] > middle - 4):
-			if not angles.has_key('b1'):
-				sys.stderr.write("ball: "+str(math.degrees(del_r[2]))+"\n")
-				angles['b1'] = math.fabs(del_r[2])
+			#if not angles.has_key('b1'):
+			sys.stderr.write("ball: "+str(math.degrees(del_r[2]))+"\n")
+			angles['b1'] = math.fabs(del_r[2])
 		if (curr_blobweights[0][2] < middle + 4) and (curr_blobweights[0][2] > middle - 4):
-			if not angles.has_key('g1'):
-				sys.stderr.write("goal: "+str(math.degrees(del_r[2]))+"\n")
-				angles['g1'] = math.fabs(del_r[2])
+			#if not angles.has_key('g1'):
+			sys.stderr.write("goal: "+str(math.degrees(del_r[2]))+"\n")
+			angles['g1'] = math.fabs(del_r[2])
 	move_complete = False
 	angle1 = angles['b1'] * 180.0 / math.pi
 	angle2 = angles['g1'] * 180.0 / math.pi
@@ -135,13 +135,13 @@ def turn_and_find():
 	#sys.stderr.write("Looking for things again\n")
 	while not(move_complete):
 		if (curr_blobweights[0][1] < middle + 4) and (curr_blobweights[0][1] > middle - 4):
-			if not angles.has_key('b2'):
-				sys.stderr.write("ball: "+str(math.degrees(del_r[2]))+"\n")
-				angles['b2'] = math.fabs(del_r[2])
+			#if not angles.has_key('b2'):
+			sys.stderr.write("ball: "+str(math.degrees(del_r[2]))+"\n")
+			angles['b2'] = math.fabs(del_r[2])
 		if (curr_blobweights[0][2] < middle + 4) and (curr_blobweights[0][2] > middle - 4):
-			if not angles.has_key('g2'):
- 				sys.stderr.write("goal: "+str(math.degrees(del_r[2]))+"\n")
-				angles['g2'] = math.fabs(del_r[2])
+			#if not angles.has_key('g2'):
+ 			sys.stderr.write("goal: "+str(math.degrees(del_r[2]))+"\n")
+			angles['g2'] = math.fabs(del_r[2])
 	move_complete = False
 	angle3 = angles['b2'] * 180.0 / math.pi
 	angle4 = angles['g2'] * 180.0 / math.pi
