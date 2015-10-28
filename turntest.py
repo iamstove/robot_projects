@@ -171,7 +171,7 @@ def triangles(dict):
 	'''this function takes a dictionary of angles in radians and returns a tuple of distance and angle IN DEGREES this allows
 	for direct input in to the moving functions'''
 	factor = .5 #this is the distance we travel
-	if dict['b1'] > dict['g1']: #determines whether we moved backwards or forwards, allowing us to move the correct way the second time
+	if dict['b2'] > dict['g2']: #determines whether we moved backwards or forwards, allowing us to move the correct way the second time
 		sign = 1
 	else:
 		sign = -1
