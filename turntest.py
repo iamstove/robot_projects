@@ -12,7 +12,7 @@ from std_msgs.msg import Empty, String
 import time #itself!  WAUUUGHAHAHAHAHHAAAAA
 
 #Globals#
-pub = rospy.Publisher('kobuki_command', Twist, queue_size = 10) # Command publisher
+pub = rospy.Publisher('kobuki_command', Twist, queue_size = 10) # Command publisher, this is never used?
 pub2 = rospy.Publisher('keyboard_command', String, queue_size = 10) #publish to speed control, makes scanning turns easier
 pub3 = rospy.Publisher('/mobile_base/commands/reset_odometry', Empty, queue_size=10)
 SLEEP_TIME = .05
@@ -116,7 +116,7 @@ def turn_and_find():
 			if not angles.has_key('b1'):
 				sys.stderr.write("ball: "+str(math.degrees(del_r[2]))+"\n")
 				angles['b1'] = math.fabs(del_r[2])
-		if (curr_blobweights[0][2] < middle - 5) and (curr_blobweights[0][2] > middle + 5):
+		if (curr_blobweights[0][2] < middle + 5) and (curr_blobweights[0][2] > middle - 5):
 			if not angles.has_key('g1'):
 				sys.stderr.write("goal: "+str(math.degrees(del_r[2]))+"\n")
 				angles['g1'] = math.fabs(del_r[2])
