@@ -103,6 +103,8 @@ def twist_init():
 def turn_and_find():
 	global move_complete
 	angles = {}
+	while pub2.get_num_connections() == 0:
+		pass
 	sys.stderr.write("Startng Moving\n")
 	move_and_wait("L", 0.5, 90)
 	sys.stderr.write("Resetting and moving again\n")
