@@ -12,6 +12,7 @@ from std_msgs.msg import String
 
 pub = rospy.Publisher('kobuki_command', Twist, queue_size=10)
 pub2 = rospy.Publisher('subcontrol', String, queue_size=10)
+pub3 = rospy.Publisher('/mobile_base/commands/reset_odometry', Empty, queue_size=10)
 
 def twist_init():
 	global curr_velocity
