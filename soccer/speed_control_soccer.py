@@ -76,7 +76,10 @@ def odomCallback(data):
 	# roll, pitch, and yaw are in radian
 	# degree = yaw * 180 / math.pi
 	del_r = yaw
+
 	del_x, del_y, del_z = map(lambda x, y: x - y, r, r_0)
+
+
 
 # method begins
 def speed_change(command_type, max_speed, distance):
@@ -104,7 +107,7 @@ def speed_change(command_type, max_speed, distance):
 	sleep_time = 0.02	#this value may need to change
 	resetter()
 
-	#sys.stderr.write("Command: " + command_type + " " + str(max_speed) + " " + str(distance)+"\n")
+	#Ssys.stderr.write("Command: " + command_type + " " + str(max_speed) + " " + str(distance)+"\n")
 
 	# if we're working with a rotation instruction, we're going to need to convert
 	# from deg to radians; the command is in deg.
