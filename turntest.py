@@ -180,7 +180,7 @@ def triangles(dict):
 	lam = math.atan(hr/(y-x))
 	w = height_b/math.tan(lam)
 	dist = y + w
-	lam = math.degrees(lam)
+	lam = math.fabs(math.degrees(lam))
 	sys.stderr.write("(Dist, lam): "+str(dist)+" "+str(lam)+"\n")
 	return (dist, lam)
 
