@@ -34,8 +34,8 @@ def parse_command(data):
 		#split c into a triple that contains the following things
 		command_type, max_speed, distance = c.split(' ')
 		speed_change(command_type[0].upper(), float(max_speed), float(distance))
-		resetter()
-		rospy.sleep(0.25)
+		#resetter()
+		#rospy.sleep(0.25)
 
 		#the split command in this case should always have 3 parts
 		#print ('Split command:' + str((command_type, max_speed, distance)))
@@ -176,6 +176,10 @@ def speed_change(command_type, max_speed, distance):
 def resetter():
 	global odom_reset
 	odom_reset = True
+	while pub3.get_num_connections() == 0:
+		pass
+	pub3.publish(Empty())
+	rospy.sleep(.5)
 
 
 def bump_respond(data):
