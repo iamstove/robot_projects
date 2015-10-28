@@ -108,7 +108,7 @@ def turn_and_find():
 	sys.stderr.write("Startng Moving\n")
 	move_and_wait("L", 0.5, 90)
 	sys.stderr.write("Resetting and moving again\n")
-	pub2.publish("R .2 180")
+	pub2.publish("R .125 180")
 	sys.stderr.write("Looking for things\n")
 	middle = 320;
 	while not(move_complete):
@@ -131,7 +131,7 @@ def turn_and_find():
 		move_and_wait("B", .5, .5)
 
 	move_and_wait("L", .4 ,180)
-	pub2.publish("R .2 180")
+	pub2.publish("R .125 180")
 	sys.stderr.write("Looking for things again\n")
 	while not(move_complete):
 		if (curr_blobweights[0][1] < middle + 5) and (curr_blobweights[0][1] > middle - 5):
