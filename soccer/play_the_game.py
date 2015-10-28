@@ -124,8 +124,8 @@ def follow_the_line():
 	curr_time = time.clock()
 	time_last = curr_time # Start the time so we know when we started later.
 	last_line = curr_time # The last time we assume to have seen a line is now.
-	
-	while not_done_with_line:
+
+"""	while not_done_with_line:
 		while not(has_new_blobinfo):
 			rospy.sleep(max(time_waited / 10, SLEEP_TIME / 10)) # Sleep for a bit.  Maybe?
 		curr_time = time.clock() # Just get it so we don't ask for the time so many times
@@ -140,7 +140,7 @@ def follow_the_line():
 			curr_velocity.angular.z = K_P * blobloc + K_D * (blobloc - pastloc)
 			curr_velocity.linear.x = 0.2
 			pub.publish(curr_velocity)
-			
+
 			pastloc = blobloc
 			last_line = curr_time
 
@@ -149,7 +149,36 @@ def follow_the_line():
 			if curr_time - last_line >= .2: 	# If we haven't seen the line for three seconds
 				not_done_with_line = False 	# We're probably done with it, so we're not not done with the line.
 				twist_init()			# reinit the twist to stop the bot
-				pub.publish(curr_velocity)	# and publish that twist so the bot knows how fast not to go.
+				pub.publish(curr_velocity)	# and publish that twist so the bot knows how fast not to go."""
+
+	while not_done_with_line:
+		while not(has_new_blobinfo):
+			rospy.sleep(max(time_waited / 10, SLEEP_TIME / 10)) # Sleep for a bit.  Maybe?
+		time_waited = time.clock() - time_last # Get the difference now
+		time_last = time.clock() # Reset the time
+		has_new_blobinfo = False
+		# Now we have_new_blobinfo, so let's process.
+
+		blobloc = curr_blobweights[0][0] # 0 is x, and then 0 is, in the color list, the index for Greenline
+		if blobloc != -1: # If it hasn't been sentinelized
+			blobloc = (320.0 - blobloc) / 320.0
+			curr_velocity.angular.z = K_P * blobloc + K_D * (blobloc - pastloc)
+			#print(curr_velocity.angular.z)
+			curr_velocity.linear.x = 0.2
+			pastloc = blobloc
+			#print("going!!")
+			pub.publish(curr_velocity)
+			#hope = 20  We're hopeful that we'll continue to see the line
+
+		else: # decide whether to stay still or keep up hope
+			hope -= 1
+			curr_velocity.linear.x -= .01
+			#sys.stderr.write(str(hope)+"\n")
+			if hope < 0:
+				not_done_with_line = False # We're not NOT done with it ...
+				#print("Staying!!")
+				twist_init()
+				pub.publish(curr_velocity)
 
 	# Now we're done with the line, so we need to look for the ball
 
@@ -162,7 +191,7 @@ def follow_the_line():
 	global del_x
 	global del_r
 	global fd
-	
+
 	### NEEDS: TURN -PI/2 RAD ###
 	fd.write("Startng Moving\n")
 	#move_and_wait("L", 0.5, 90)
@@ -254,63 +283,62 @@ def scan(itemsFound):
 	return None'''
 
 def turn_and_find():
-	global x, move_complete
+	global move_complete
 	angles = {}
-	maxgoal = -1
-	sys.stderr.write("Startng Moving\n")
-	move_and_wait("L", 0.5, 90)
-	sys.stderr.write("Resetting and moving again\n")
-	pub2.publish("R .2 180")
-	sys.stderr.write("Looking for things\n")
+	while pub2.get_num_connections() == 0:
+		pass
+	#sys.stderr.write("Startng Moving\n")
+	move_and_wait("L", 0.4, 90)
+	#sys.stderr.write("Resetting and moving again\n")
+	pub2.publish("R .125 180")
+	#sys.stderr.write("Looking for things\n")
 	middle = 320;
 	while not(move_complete):
-		if (x[1] < middle + 5) and (x[1] > middle - 5):
+		if (curr_blobweights[0][1] < middle + 4) and (curr_blobweights[0][1] > middle - 4):
 			#if not angles.has_key('b1'):
-			#	sys.stderr.write("ball: "+str(del_r[2])+"\n")
-			angles['b1'] = del_r[2]
-		if (x[2] < middle - 5) and (x[2] > middle + 5):
+			#sys.stderr.write("ball: "+str(math.degrees(del_r[2]))+"\n")
+			angles['b1'] = math.fabs(del_r[2])
+		if (curr_blobweights[0][2] < middle + 4) and (curr_blobweights[0][2] > middle - 4):
 			#if not angles.has_key('g1'):
-			#	sys.stderr.write("goal: "+str(del_r[2])+"\n")
-			#if maxgoal < area[2]: #we only want the center of the biggest goal we find
-			angles['g1'] = del_r[2]
+			#sys.stderr.write("goal: "+str(math.degrees(del_r[2]))+"\n")
+			angles['g1'] = math.fabs(del_r[2])
 	move_complete = False
-	angle1 = angles['b1'] *180.0 / math.pi
-	angle2 = angles['g1']*180.0/math.pi
-	sys.stderr.write("angles (b1,b2): " + str(angle1)+ ", "+str(angle2)+'\n')
+	angle1 = angles['b1'] * 180.0 / math.pi
+	angle2 = angles['g1'] * 180.0 / math.pi
+	sys.stderr.write("angles (b1,g1): " + str(angle1)+ ", "+str(angle2)+'\n')
 	resetter()
 	if angles['b1'] > angles['g1']:
-		move_and_wait("F", .5, .5)
+		move_and_wait("F", .4, .5)
 	else:
-		move_and_wait("B", .5, .5)
+		move_and_wait("B", .4, .5)
 
-	move_and_wait("L", .5 ,180)
-	pub2.publish("R .2 180")
-	sys.stderr.write("Looking for things again\n")
-	maxgoal = -1 #we'll have a new biggest
+	move_and_wait("L", .35 ,180)
+	pub2.publish("R .125 180")
+	#sys.stderr.write("Looking for things again\n")
 	while not(move_complete):
-		if (x[1] < middle + 5) and (x[1] > middle - 5):
+		if (curr_blobweights[0][1] < middle + 4) and (curr_blobweights[0][1] > middle - 4):
 			#if not angles.has_key('b2'):
-			#	sys.stderr.write("ball: "+str(del_r[2])+"\n")
-			angles['b2'] = del_r[2]
-		if (x[2] < middle + 5) and (x[2] > middle - 5):
+			#sys.stderr.write("ball: "+str(math.degrees(del_r[2]))+"\n")
+			angles['b2'] = math.fabs(del_r[2])
+		if (curr_blobweights[0][2] < middle + 4) and (curr_blobweights[0][2] > middle - 4):
 			#if not angles.has_key('g2'):
-				#	sys.stderr.write("goal: "+str(del_r[2])+"\n")
-			#if maxgoal < area[2]: #we only want the center of the biggest goal we find
-			angles['g2'] = del_r[2]
+ 			#sys.stderr.write("goal: "+str(math.degrees(del_r[2]))+"\n")
+			angles['g2'] = math.fabs(del_r[2])
 	move_complete = False
 	angle3 = angles['b2'] * 180.0 / math.pi
 	angle4 = angles['g2'] * 180.0 / math.pi
 	resetter()
 	sys.stderr.write("angles (b2, g2): " + str(angle3)+ ", "+str(angle4)+'\n')
-	(final_dist,final_angle)=triangles(angles)
+	(final_dist,final_angle, drivedist)=triangles(angles)
 	if final_dist > 0:
 		final_dist = math.fabs(final_dist)
 		move_and_wait("F", .25, final_dist)
+		final_angle = 180 - final_angle
 	else:
 		final_dist = math.fabs(final_dist)
 		move_and_wait("B", .25, final_dist)
 	move_and_wait("L", .25, final_angle)
-	move_and_wait("F", .75, 1)
+	move_and_wait("F", .75, drivedist)
 
 def move_and_wait(direction, speed, distance):
 	global move_complete, SLEEP_TIME
@@ -324,19 +352,27 @@ def move_and_wait(direction, speed, distance):
 def triangles(dict):
 	'''this function takes a dictionary of angles in radians and returns a tuple of distance and angle IN DEGREES this allows
 	for direct input in to the moving functions'''
-	x = (.5 * math.tan(dict['g1']))/(math.tan(dict['g2'])-math.tan(dict['g1']))
+	factor = .5 #this is the distance we travel
+	if dict['b2'] > dict['g2']: #determines whether we moved backwards or forwards, allowing us to move the correct way the second time
+		sign = 1
+	else:
+		sign = -1
+	x = (factor * math.tan(dict['g1']))/(math.tan(dict['g2'])-math.tan(dict['g1']))
 	height_g = (math.tan(dict['g2'])*x)
 
-	y = (.5 * math.tan(dict['b1']))/(math.tan(dict['b2'])-math.tan(dict['b1']))
+	y = (factor * math.tan(dict['b1']))/(math.tan(dict['b2'])-math.tan(dict['b1']))
 	height_b = math.tan(dict['b2'])*y
 
 	hr = height_g-height_b
 	lam = math.atan(hr/(y-x))
 	w = height_b/math.tan(lam)
 	dist = y + w
-	lam = math.degrees(lam)
-	sys.stderr.write("(Dist, lam): "+str(dist)+" "+str(lam)+"\n")
-	return (dist, lam)
+	dist *= sign
+	lam = math.fabs(math.degrees(lam))
+	bdist = math.fabs(math.sqrt(w**2 + height_b**2))
+	sys.stderr.write("(Dist, lam, bdist): "+str(dist)+" "+str(lam)+ str(bdist) +"\n")
+	bdist += .2
+	return (dist, lam, bdist)
 
 def moveCallback(message):
 	global move_complete
@@ -345,7 +381,7 @@ def moveCallback(message):
 def play_game():
 	global fd
 	fd = open("roserrlog.txt", "w")
-	
+
 	init_all() # Initialize everything (includes initialization of the twist for current motion)
 	rospy.init_node('soccer_player', anonymous = True) # Initialize this node
 	rospy.Subscriber('/blobs', Blobs, blobsCallback)
@@ -353,7 +389,7 @@ def play_game():
 	rospy.Subscriber('subcontrol', String, moveCallback)
 	follow_the_line()
 	resetter()
-	
+
 	fd.write("End of the line\nPlaying ball\n")
 	rospy.sleep(3) #time to turn the lid up
 	turn_and_find()
