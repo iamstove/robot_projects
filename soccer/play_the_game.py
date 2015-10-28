@@ -146,7 +146,7 @@ def follow_the_line():
 
 		else: # decide whether to stay still or keep up hope
 			curr_velocity.linear.x = max(0.0, 0.2 * (1.0 - curr_time + last_line)) # 1s of linelessness to stop
-			if curr_time - last_line >= 3.0: 	# If we haven't seen the line for three seconds
+			if curr_time - last_line >= .2: 	# If we haven't seen the line for three seconds
 				not_done_with_line = False 	# We're probably done with it, so we're not not done with the line.
 				twist_init()			# reinit the twist to stop the bot
 				pub.publish(curr_velocity)	# and publish that twist so the bot knows how fast not to go.
