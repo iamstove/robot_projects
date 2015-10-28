@@ -55,7 +55,7 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 		for box in data.blobs:
 			if box.name in color_namelist:
 				color_index = color_namelist.index(box.name)
-				if color_index == color_namelist.index('Orangegoal') and box.area > 4000: #we only consider goal boxes that are BIG
+				if color_index == color_namelist.index('Orangegoal') and box.area > 3500: #we only consider goal boxes that are BIG
 					#sys.stderr.write(str(color_index)+" - " +str(box.area) + " \n")
 					if area[color_index] == -1:
 						area[color_index] = box.area
@@ -147,7 +147,7 @@ def turn_and_find():
 	angle4 = angles['g2'] * 180.0 / math.pi
 	resetter()
 	sys.stderr.write("angles (b2, g2): " + str(angle3)+ ", "+str(angle4)+'\n')
-	(final_dist,final_angle)=triangles(angles)
+	(final_dist,final_angle, drivedist)=triangles(angles)
 	if final_dist > 0:
 		final_dist = math.fabs(final_dist)
 		move_and_wait("F", .25, final_dist)
@@ -156,7 +156,7 @@ def turn_and_find():
 		final_dist = math.fabs(final_dist)
 		move_and_wait("B", .25, final_dist)
 	move_and_wait("L", .25, final_angle)
-	move_and_wait("F", .75, 1)
+	move_and_wait("F", .75, drivedist)
 
 def move_and_wait(direction, speed, distance):
 	global move_complete, SLEEP_TIME
@@ -181,8 +181,10 @@ def triangles(dict):
 	w = height_b/math.tan(lam)
 	dist = y + w
 	lam = math.fabs(math.degrees(lam))
-	sys.stderr.write("(Dist, lam): "+str(dist)+" "+str(lam)+"\n")
-	return (dist, lam)
+	bdist = math.fabs(math.sqrt(w**2 + hb**2))
+	sys.stderr.write("(Dist, lam, bdist): "+str(dist)+" "+str(lam)+ str(bdist) +"\n")
+	bdist += .2
+	return (dist, lam, bdist)
 
 def moveCallback(message):
 	global move_complete
