@@ -1,13 +1,13 @@
 <launch>
   <!-- Location of the cmvision color file -->
-  <param name="cmvision/color_file" type="string" 
+  <param name="cmvision/color_file" type="string"
          value="/home/student/cs1567/src/mypackage/scripts/soccercolors.txt" />
 
   <!-- Turn debug output on or off -->
   <param name="cmvision/debug_on" type="bool" value="true"/>
 
   <!-- Turn color calibration on or off -->
-  <param name="cmvision/color_cal_on" type="bool" value="false"/>
+  <param name="cmvision/color_cal_on" type="bool" value="true"/>
 
   <!-- Enable Mean shift filtering -->
   <param name="cmvision/mean_shift_on" type="bool" value="false"/>
