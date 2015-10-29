@@ -258,9 +258,11 @@ def scan(itemsFound):
 def turn_and_find():
 	global move_complete
 	angles = {}
+	sys.stderr.write("Waiting for lid lift\n")
+	rospy.sleep(2.5)
 	while pub2.get_num_connections() == 0:
 		pass
-	#sys.stderr.write("Startng Moving\n")
+	sys.stderr.write("Startng Moving\n")
 	move_and_wait("L", 0.4, 90)
 	#sys.stderr.write("Resetting and moving again\n")
 	move_complete = False
@@ -361,9 +363,8 @@ def play_game():
 	rospy.Subscriber('subcontrol', String, moveCallback)
 	follow_the_line()
 	resetter()
-
 	sys.stderr.write("End of the line\nPlaying ball\n")
-	rospy.sleep(3) #time to turn the lid up
+	#rospy.sleep(3) #time to turn the lid up
 	turn_and_find()
 
 	fd.close()
