@@ -173,6 +173,7 @@ def follow_the_line():
 		else: # decide whether to stay still or keep up hope
 			hope -= 1
 			curr_velocity.linear.x -= .01
+			pub.publish(curr_velocity)
 			#sys.stderr.write(str(hope)+"\n")
 			if hope < 0:
 				not_done_with_line = False # We're not NOT done with it ...
