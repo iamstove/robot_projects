@@ -263,6 +263,7 @@ def turn_and_find():
 	#sys.stderr.write("Startng Moving\n")
 	move_and_wait("L", 0.4, 90)
 	#sys.stderr.write("Resetting and moving again\n")
+	move_complete = False
 	pub2.publish("R .125 180")
 	#sys.stderr.write("Looking for things\n")
 	middle = 320;
@@ -275,7 +276,6 @@ def turn_and_find():
 			#if not angles.has_key('g1'):
 			#sys.stderr.write("goal: "+str(math.degrees(del_r[2]))+"\n")
 			angles['g1'] = math.fabs(del_r[2])
-	move_complete = False
 	angle1 = angles['b1'] * 180.0 / math.pi
 	angle2 = angles['g1'] * 180.0 / math.pi
 	sys.stderr.write("angles (b1,g1): " + str(angle1)+ ", "+str(angle2)+'\n')
@@ -319,7 +319,6 @@ def move_and_wait(direction, speed, distance):
 	pub2.publish(direction + " " + repr(speed) + " " + str(distance))
 	while not(move_complete):
 		rospy.sleep(SLEEP_TIME)
-	move_complete = False
 	resetter()
 
 def triangles(dict):
