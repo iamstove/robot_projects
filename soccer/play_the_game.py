@@ -52,8 +52,8 @@ def blobsCallback(data): # This is called whenever a blobs message is posted; th
 	global has_new_blobinfo
 	global fd
 	global x, y
-	x = [0, 0, 0] # Greenline, Redball, Orangegoal
-	y = [0, 0, 0] # could be generalized but is ok for now
+	x = [-1, -1, -1] # Greenline, Redball, Orangegoal
+	y = [-1, -1, -1] # could be generalized but is ok for now
 	area = [-1, -1, -1]
 	if data.blob_count > 0: # We have a blob / some blobs, track them
 		for box in data.blobs:
@@ -124,32 +124,7 @@ def follow_the_line():
 	curr_time = time.clock()
 	time_last = curr_time # Start the time so we know when we started later.
 	last_line = curr_time # The last time we assume to have seen a line is now.
-
-"""	while not_done_with_line:
-		while not(has_new_blobinfo):
-			rospy.sleep(max(time_waited / 10, SLEEP_TIME / 10)) # Sleep for a bit.  Maybe?
-		curr_time = time.clock() # Just get it so we don't ask for the time so many times
-		time_waited = curr_time - time_last # Get the difference now
-		time_last = curr_time # Reset the time
-		has_new_blobinfo = False
-		# Now we have_new_blobinfo, so let's process.
-
-		blobloc = curr_blobweights[0][0] # 0 is x, and then 0 is, in the color list, the index for Greenline
-		if blobloc != -1: # If it hasn't been sentinelized
-			blobloc = (320.0 - blobloc) / 320.0
-			curr_velocity.angular.z = K_P * blobloc + K_D * (blobloc - pastloc)
-			curr_velocity.linear.x = 0.2
-			pub.publish(curr_velocity)
-
-			pastloc = blobloc
-			last_line = curr_time
-
-		else: # decide whether to stay still or keep up hope
-			curr_velocity.linear.x = max(0.0, 0.2 * (1.0 - curr_time + last_line)) # 1s of linelessness to stop
-			if curr_time - last_line >= .2: 	# If we haven't seen the line for three seconds
-				not_done_with_line = False 	# We're probably done with it, so we're not not done with the line.
-				twist_init()			# reinit the twist to stop the bot
-				pub.publish(curr_velocity)	# and publish that twist so the bot knows how fast not to go."""
+	hope = 0
 
 	while not_done_with_line:
 		while not(has_new_blobinfo):
@@ -171,15 +146,12 @@ def follow_the_line():
 			#hope = 20  We're hopeful that we'll continue to see the line
 
 		else: # decide whether to stay still or keep up hope
-			hope -= 1
-			curr_velocity.linear.x -= .01
-			pub.publish(curr_velocity)
+			#sys.stderr.write(str(blobloc) + "\n")
 			#sys.stderr.write(str(hope)+"\n")
-			if hope < 0:
-				not_done_with_line = False # We're not NOT done with it ...
-				#print("Staying!!")
-				twist_init()
-				pub.publish(curr_velocity)
+			not_done_with_line = False # We're not NOT done with it ...
+			#print("Staying!!")
+			twist_init()
+			pub.publish(curr_velocity)
 
 	# Now we're done with the line, so we need to look for the ball
 
@@ -391,7 +363,7 @@ def play_game():
 	follow_the_line()
 	resetter()
 
-	fd.write("End of the line\nPlaying ball\n")
+	sys.stderr.write("End of the line\nPlaying ball\n")
 	rospy.sleep(3) #time to turn the lid up
 	turn_and_find()
 
