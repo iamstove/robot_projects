@@ -27,7 +27,7 @@ def main():
         offset = (240 * step) + (320 * 4)
         (dist,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
         print "Distance: %f" % dist
-        
+
 
 if __name__ == '__main__':
     main()
