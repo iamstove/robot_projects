@@ -25,12 +25,14 @@ def main():
         step = depthData.step
         depthValue = []
         tot = 0
+        i = 0
         mid_height = 240
         for pixel in range(0, 640, 20):
             offset = (mid_height * step) + (pixel * 4)
-            (depthValue,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
-            tot += depthValue
-
+            (depthValue[i],) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
+            tot += depthValue[i]
+            i++
+            
         tot /= 32
         sys.stderr.write("Distance: " + str(dist) + "\n")
         sys.stderr.write("Avg: " + str(tot) + "\n")
