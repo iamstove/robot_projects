@@ -31,12 +31,13 @@ def main():
 		i = 0
 		mid_height = 240
 		for pixel in range(0, 640, 20):
-			sys.stderr.write(str(i) + "\n")
+			#sys.stderr.write(str(i) + "\n")
 			offset = (mid_height * step) + (pixel * 4)
-			sys.stderr.write(str(offset)+"\n")
-			(depthValue[i],) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
-			tot += depthValue[i]
-			sys.stderr.write("Distance: " + str(depthValue[i]) + "\n")
+			#sys.stderr.write(str(offset)+"\n")
+			(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
+			depthValue.append(val)
+			tot += val
+			#sys.stderr.write("Distance: " + str(depthValue[i]) + "\n")
 			i += 1
 
 		tot /= 32
