@@ -11,7 +11,7 @@ isDepthReady = False;
 def depthCallback(data):
 	global depthImage, isDepthImageReady
 	depthImage = data
-	isDepthImageReady = True
+	isDepthReady = True
 
 def main():
 	global depthData, isDepthReady
