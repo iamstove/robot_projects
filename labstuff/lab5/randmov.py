@@ -3,6 +3,7 @@
 import rospy
 from sensor_msgs.msg import Image
 from struct import unpack
+import sys
 
 depthData = Image();
 isDepthReady = False;
