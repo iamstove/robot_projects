@@ -31,8 +31,8 @@ def main():
             tot += depthValue
 
         tot /= 32
-        print "Distance: %f" % dist
-        print "Avg: %f" % tot
+        sys.stderr.write("Distance: " + str(dist) + "\n")
+        sys.stderr.write("Avg: " + str(tot) + "\n")
 
         for value in depthValue:
             if math.isnan(value):
