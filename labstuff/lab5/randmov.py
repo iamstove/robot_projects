@@ -17,13 +17,15 @@ def main():
 	global depthData, isDepthReady
 	rospy.init_node('depth_example', anonymous=True)
 	rospy.Subscriber("/camera/depth/image", Image, depthCallback, queue_size=10)
+	sys.stderr.write("hello1")
+
 
 	while not isDepthReady and not rospy.is_shutdown():
 		pass
 
 	while not rospy.is_shutdown():
 		step = depthData.step
-		sys.stderr.write("hello")
+		sys.stderr.write("hello2")
 		depthValue = []
 		tot = 0
 		i = 0
