@@ -23,6 +23,7 @@ def main():
 
 	while not rospy.is_shutdown():
 		step = depthData.step
+		sys.stderr.write("hello")
 		depthValue = []
 		tot = 0
 		i = 0
