@@ -25,7 +25,7 @@ def main():
 
 	while not rospy.is_shutdown():
 		step = depthData.step
-		#sys.stderr.write("hello2\n")
+		sys.stderr.write("step: " +str(step)+ "\n")
 		depthValue = []
 		tot = 0
 		i = 0
@@ -33,7 +33,7 @@ def main():
 		for pixel in range(0, 640, 20):
 			sys.stderr.write(str(i) + "\n")
 			offset = (mid_height * step) + (pixel * 4)
-			sys.stderr.wrtie(str(offset)+"\n")
+			sys.stderr.write(str(offset)+"\n")
 			(depthValue[i],) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
 			tot += depthValue[i]
 			sys.stderr.write("Distance: " + str(depthValue[i]) + "\n")
