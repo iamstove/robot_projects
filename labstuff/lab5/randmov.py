@@ -8,26 +8,26 @@ depthData = Image();
 isDepthReady = False;
 
 def updateDepthImage(data):
-    global depthImage, isDepthImageReady
-    depthImage = data
-    isDepthImageReady = True
+	global depthImage, isDepthImageReady
+	depthImage = data
+	isDepthImageReady = True
 
 def main():
-    global depthData, isDepthReady
-    rospy.init_node('depth_example', anonymous=True)
-    rospy.Subscriber("/camera/depth/image", Image, depthCallback, queue_size=10)
+	global depthData, isDepthReady
+	rospy.init_node('depth_example', anonymous=True)
+	rospy.Subscriber("/camera/depth/image", Image, depthCallback, queue_size=10)
 
-    while not isDepthReady and not rospy.is_shutdown():
-        pass
+	while not isDepthReady and not rospy.is_shutdown():
+		pass
 
-    while not rospy.is_shutdown():
-        step = depthData.step
-        depthValue = []
+	while not rospy.is_shutdown():
+		step = depthData.step
+		depthValue = []
 		tot = 0
 		mid_height = 240
-        for pixel in range(0, 640, 20):
+		for pixel in range(0, 640, 20):
 			offset = (mid_height * step) + (pixel * 4)
-        	(depthValue,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
+			(depthValue,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
 			tot += depthValue
 
 		tot /= 32
@@ -49,4 +49,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+	main()
