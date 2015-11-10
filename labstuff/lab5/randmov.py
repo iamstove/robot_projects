@@ -9,6 +9,17 @@ import math
 depthData = Image();
 isDepthReady = False;
 keepMove = True
+pub = rospy.Publisher('kobuki_command', Twist, queue_size=10)
+
+def twist_init():
+	global curr_velocity
+	curr_velocity = Twist()
+	curr_velocity.linear.x = 0.0
+	curr_velocity.linear.y = 0.0
+	curr_velocity.linear.z = 0.0
+	curr_velocity.angular.x = 0.0
+	curr_velocity.angular.y = 0.0
+	curr_velocity.angular.z = 0.0
 
 def depthCallback(data):
 	global depthData, isDepthReady
@@ -17,23 +28,60 @@ def depthCallback(data):
 
 def scanup(column):
 	colarr = []
-	for pixel in range(480,240,-15): #spotcheck up every 15px, compile into array, (this will be 16 in length)
+	for pixel in range(480,240,-1): #spotcheck up every 15px, compile into array, (this will be 16 in length)
 		offset = (pixel * depthData.step) + (column * 4)
 		(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
 		colarr.append(val)
 
-	for d in range(16):
+	for d in range(240):
 		if d+1 = len(colarr): #check if our step will put us out of bounds
 			break
 		else:
 			if colarr[d] > 5 and math.isnan(colarr[d+1]): #this would be the case where our nan is far away
-				 continue
-			else if colarr[d] < 1 and math.isnan(colarr[d+1]): #the case when we should stop and turn
-				continue
+				return False
+			else if colarr[d] < 1.5 and math.isnan(colarr[d+1]): #the case when we should stop and turn
+				return True
+
+def turn_away():
+	twist_init() #make sure everything is zero, so we don't turn and move
+	curr_velocity.angular.z = .25
+	object_found = True
+	while object_found:
+		truth_arr = []
+		pub.publish(curr_velocity) #hand off velocity to constant command
+		horzArr = []
+		for pixel in range(0, 640, 20): #build an array of values across the center of the screen (20px width)
+			#sys.stderr.write(str(i) + "\n")
+			offset = (mid_height * step) + (pixel * 4)
+			#sys.stderr.write(str(offset)+"\n")
+			(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
+			horzArr.append(val)
+
+		i = 0
+		for val in horzArr:
+			if math.isnan(val):
+				truth_arr.append(scanup(i))
+			else:
+				if val <= 1:
+					truth_arr.append(True)
+				else:
+					truth_arr.append(False)
+			i += 20
+
+		object_found = truth_test(truth_arr)
+
+	return False #now we know it's no longer turning
 
 
+def truth_test(t_arr):
+	for item in t_arr:
+		if item = True:
+			return True
+		else: continue
+	return False
 
 def main():
+	twist_init()
 	global depthData, isDepthReady
 	rospy.init_node('depth_example', anonymous=True)
 	rospy.Subscriber("/camera/depth/image", Image, depthCallback, queue_size=10)
@@ -46,14 +94,14 @@ def main():
 	while not rospy.is_shutdown() and keepMove:
 		step = depthData.step
 		sys.stderr.write("step: " +str(step)+ "\n")
-		depthValue = []
+		horzArr = []
 		tot = 0
 		for pixel in range(0, 640, 20): #build an array of values across the center of the screen (20px width)
 			#sys.stderr.write(str(i) + "\n")
 			offset = (mid_height * step) + (pixel * 4)
 			#sys.stderr.write(str(offset)+"\n")
 			(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
-			depthValue.append(val)
+			horzArr.append(val)
 			tot += val
 			#sys.stderr.write("Distance: " + str(depthValue[i]) + "\n")
 
@@ -62,7 +110,7 @@ def main():
 		#ssys.stderr.write("Avg: " + str(tot) + "\n")
 
 		i = 0 #contains which column we're on
-		for value in depthValue:
+		for value in horzArr:
 			if math.isnan(value): #check our spotchecks for nans
 				scanup(i)
 				continue
