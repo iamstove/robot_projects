@@ -14,6 +14,11 @@ def depthCallback(data):
 	depthData = data
 	isDepthReady = True
 
+def scanup(colum):
+	for pixel in range(480,240,-1):
+		
+
+
 def main():
 	global depthData, isDepthReady
 	rospy.init_node('depth_example', anonymous=True)
@@ -42,12 +47,12 @@ def main():
 			i += 1
 
 		tot /= 32
-		sys.stderr.write("Distance: " + str(depthValue) + "\n")
-		sys.stderr.write("Avg: " + str(tot) + "\n")
+		#sys.stderr.write("Distance: " + str(depthValue) + "\n")
+		#ssys.stderr.write("Avg: " + str(tot) + "\n")
 
 		for value in depthValue:
 			if math.isnan(value):
-				#stop and scan up
+				#scanup and decide to stop or go
 				continue
 			else: #we have a real number, we want to see if its less than 1
 				if value < 1:
