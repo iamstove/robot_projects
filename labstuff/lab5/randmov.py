@@ -22,11 +22,13 @@ def twist_init():
 	curr_velocity.angular.z = 0.0
 
 def depthCallback(data):
+	"""updates depthData"""
 	global depthData, isDepthReady
 	depthData = data
 	isDepthReady = True
 
 def scanup(column):
+	"""returns false for too far and returns true for too close"""
 	colarr = []
 	for pixel in range(480,240,-1): #spotcheck up every 15px, compile into array, (this will be 16 in length)
 		offset = (pixel * depthData.step) + (column * 4)
@@ -43,6 +45,8 @@ def scanup(column):
 				return True
 
 def turn_away():
+	"""Turns until we no longer see anything"""
+	global curr_velocity
 	twist_init() #make sure everything is zero, so we don't turn and move
 	curr_velocity.angular.z = .25
 	object_found = True
@@ -70,10 +74,13 @@ def turn_away():
 
 		object_found = truth_test(truth_arr)
 
+	curr_velocity.angular.z = 0
+	pub.publish(curr_velocity) #stop turning
 	return False #now we know it's no longer turning
 
 
 def truth_test(t_arr):
+	"""takes an array of booleans and if one of them is true, that means the object is still in sight, else it rturns false and we can stop turning and start moving again"""
 	for item in t_arr:
 		if item = True:
 			return True
@@ -82,7 +89,7 @@ def truth_test(t_arr):
 
 def main():
 	twist_init()
-	global depthData, isDepthReady
+	global depthData, isDepthReady, curr_velocity
 	rospy.init_node('depth_example', anonymous=True)
 	rospy.Subscriber("/camera/depth/image", Image, depthCallback, queue_size=10)
 	#sys.stderr.write("hello1\n")
@@ -95,32 +102,36 @@ def main():
 		step = depthData.step
 		sys.stderr.write("step: " +str(step)+ "\n")
 		horzArr = []
-		tot = 0
+		#tot = 0
 		for pixel in range(0, 640, 20): #build an array of values across the center of the screen (20px width)
 			#sys.stderr.write(str(i) + "\n")
 			offset = (mid_height * step) + (pixel * 4)
 			#sys.stderr.write(str(offset)+"\n")
 			(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
 			horzArr.append(val)
-			tot += val
+			#tot += val
 			#sys.stderr.write("Distance: " + str(depthValue[i]) + "\n")
 
-		tot /= 32
+		#tot /= 32
 		#sys.stderr.write("Distance: " + str(depthValue) + "\n")
-		#ssys.stderr.write("Avg: " + str(tot) + "\n")
+		#sys.stderr.write("Avg: " + str(tot) + "\n")
 
 		i = 0 #contains which column we're on
 		for value in horzArr:
 			if math.isnan(value): #check our spotchecks for nans
 				scanup(i)
-				continue
 			else: #we have a real number, we want to see if its less than 1
 				if value < 1:
 					#stop and turn until we don't see it anymore
-					continue
+					still_turning = True
+					still_turning = turn_away()
+					if still_turning = True: #wait until it's no longer turning
+						print "Massssssive error"
 				else:
 					#keep moving
-					continue
+					curr_velocity.linear.x = .25
+					pub.publish(curr_velocity)
+
 			i += 20
 
 
