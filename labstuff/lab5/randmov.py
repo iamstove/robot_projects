@@ -90,7 +90,7 @@ def turn_away(loc):
 def truth_test(t_arr):
 	"""takes an array of booleans and if one of them is true, that means the object is still in sight, else it rturns false and we can stop turning and start moving again"""
 	for item in t_arr:
-		if item = True:
+		if item:
 			return True
 		else: continue
 	return False
