@@ -110,6 +110,7 @@ def main():
 		step = depthData.step
 		#sys.stderr.write("step: " +str(step)+ "\n")
 		horzArr = []
+		mid_height = 240
 		#tot = 0
 		for pixel in range(0, 640, 20): #build an array of values across the center of the screen (20px width)
 			#sys.stderr.write(str(i) + "\n")
