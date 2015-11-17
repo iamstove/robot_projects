@@ -33,7 +33,7 @@ def depthCallback(data):
 def scanup(column):
 	"""returns false for too far and returns true for too close"""
 	colarr = []
-	for pixel in range(480,240,-1): #spotcheck up every 15px, compile into array, (this will be 16 in length)
+	for pixel in range(479,239,-1): #spotcheck up every 15px, compile into array, (this will be 16 in length)
 		offset = (pixel * depthData.step) + (column * 4)
 		(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
 		colarr.append(val)
