@@ -44,7 +44,7 @@ def scanup(column):
 		else:
 			if colarr[d] > 5 and math.isnan(colarr[d+1]): #this would be the case where our nan is far away
 				return False
-			else if colarr[d] < 1.5 and math.isnan(colarr[d+1]): #the case when we should stop and turn
+			elif colarr[d] < 1.5 and math.isnan(colarr[d+1]): #the case when we should stop and turn
 				return True
 
 def turn_away(loc):
