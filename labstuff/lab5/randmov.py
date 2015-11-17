@@ -47,15 +47,19 @@ def scanup(column):
 			else if colarr[d] < 1.5 and math.isnan(colarr[d+1]): #the case when we should stop and turn
 				return True
 
-def turn_away():
+def turn_away(loc):
 	"""Turns until we no longer see anything"""
 	global curr_velocity
 	twist_init() #make sure everything is zero, so we don't turn and move
-	curr_velocity.angular.z = .25
+	if loc < 10:
+		curr_velocity.angular.z = .25
+	else:
+		curr_velocity.angular.z = -.25
 	object_found = True
 	while object_found:
 		truth_arr = []
-		pub.publish(curr_velocity) #hand off velocity to constant command
+		#pub.publish(curr_velocity) #hand off velocity to constant command
+		print(str(curr_velocity))
 		horzArr = []
 		for pixel in range(0, 640, 20): #build an array of values across the center of the screen (20px width)
 			#sys.stderr.write(str(i) + "\n")
@@ -78,7 +82,8 @@ def turn_away():
 		object_found = truth_test(truth_arr)
 
 	curr_velocity.angular.z = 0
-	pub.publish(curr_velocity) #stop turning
+	#pub.publish(curr_velocity) #stop turning
+	print(str(curr_velocity))
 	return False #now we know it's no longer turning
 
 
@@ -103,7 +108,7 @@ def main():
 
 	while not rospy.is_shutdown() and keepMove:
 		step = depthData.step
-		sys.stderr.write("step: " +str(step)+ "\n")
+		#sys.stderr.write("step: " +str(step)+ "\n")
 		horzArr = []
 		#tot = 0
 		for pixel in range(0, 640, 20): #build an array of values across the center of the screen (20px width)
@@ -127,13 +132,14 @@ def main():
 				if value < 1:
 					#stop and turn until we don't see it anymore
 					still_turning = True
-					still_turning = turn_away()
+					still_turning = turn_away(i)
 					if still_turning = True: #wait until it's no longer turning
 						print "Massssssive error"
 				else:
 					#keep moving
 					curr_velocity.linear.x = .25
-					pub.publish(curr_velocity)
+					#pub.publish(curr_velocity)
+					print(str(curr_velocity))
 
 			i += 20
 
