@@ -133,7 +133,7 @@ def main():
 					#stop and turn until we don't see it anymore
 					still_turning = True
 					still_turning = turn_away(i)
-					if still_turning = True: #wait until it's no longer turning
+					if still_turning: #wait until it's no longer turning
 						print "Massssssive error"
 				else:
 					#keep moving
