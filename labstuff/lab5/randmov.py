@@ -39,7 +39,7 @@ def scanup(column):
 		colarr.append(val)
 
 	for d in range(240):
-		if (d+1) = len(colarr): #check if our step will put us out of bounds
+		if (d+1) == len(colarr): #check if our step will put us out of bounds
 			break
 		else:
 			if colarr[d] > 5 and math.isnan(colarr[d+1]): #this would be the case where our nan is far away
