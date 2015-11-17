@@ -64,7 +64,7 @@ def turn_away(loc):
 		horzArr = []
 		for pixel in range(0, 640, 20): #build an array of values across the center of the screen (20px width)
 			#sys.stderr.write(str(i) + "\n")
-			offset = (mid_height * step) + (pixel * 4)
+			offset = (mid_height * depthData.step) + (pixel * 4)
 			#sys.stderr.write(str(offset)+"\n")
 			(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
 			horzArr.append(val)
