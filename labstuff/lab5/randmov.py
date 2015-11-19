@@ -59,8 +59,8 @@ def turn_away(loc):
 	object_found = True
 	while object_found:
 		truth_arr = []
-		#pub.publish(curr_velocity) #hand off velocity to constant command
-		print(str(curr_velocity))
+		pub.publish(curr_velocity) #hand off velocity to constant command
+		#print(str(curr_velocity))
 		horzArr = []
 		for pixel in range(0, 640, 20): #build an array of values across the center of the screen (20px width)
 			#sys.stderr.write(str(i) + "\n")
@@ -83,8 +83,8 @@ def turn_away(loc):
 		object_found = truth_test(truth_arr)
 
 	curr_velocity.angular.z = 0
-	#pub.publish(curr_velocity) #stop turning
-	print(str(curr_velocity))
+	pub.publish(curr_velocity) #stop turning
+	#print(str(curr_velocity))
 	return False #now we know it's no longer turning
 
 
@@ -139,8 +139,8 @@ def main():
 				else:
 					#keep moving
 					curr_velocity.linear.x = .25
-					#pub.publish(curr_velocity)
-					print(str(curr_velocity))
+					pub.publish(curr_velocity)
+					#print(str(curr_velocity))
 
 			i += 20
 
