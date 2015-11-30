@@ -22,6 +22,7 @@ blobsData = Blobs()
 depthImage = Image()
 mid_height = 240
 pub = rospy.Publisher('kobuki_command', Twist, queue_size=10)
+color_namelist = ['Orange', 'Pink', 'Green', 'Blue'] # We'll use this for indexing different colors.
 
 def twist_init():
 	global curr_velocity
@@ -49,6 +50,40 @@ def updateColorImage(data):
 	global colorImage, isColorImageReady
 	colorImage = data
 	isColorImageReady = True
+
+def parseBlobs(data)
+	global curr_blobweights
+	global has_new_blobinfo
+	global fd
+	global x, y
+	x = [-1, -1, -1, -1] # Orange, Pink, Green, Blue
+	y = [-1, -1, -1, -1] # could be generalized but is ok for now
+	area = [-1, -1, -1, -1]
+	if data.blob_count > 0: # We have a blob / some blobs, track them
+		for box in data.blobs:
+			if box.name in color_namelist:
+				color_index = color_namelist.index(box.name)
+				if area[color_index] == -1:
+					area[color_index] = box.area
+				else:
+					area[color_index] += box.area
+				y[color_index] += box.y * box.area
+				x[color_index] += box.x * box.area
+			else:
+				fd.write("Unidentified or irrelevant color: " + box.name + "\n")
+
+		for color_index in range(len(color_namelist)): # Divide by the total weight to find the center position
+			if area[color_index] == -1:
+				x[color_index] = -1
+				y[color_index] = -1
+			else:
+				x[color_index] /= area[color_index]
+				y[color_index] /= area[color_index]
+
+		curr_blobweights = [x, y] # Boom.
+	else:
+		curr_blobweights = [area, area]
+	has_new_blobinfo = True
 
 def selfie(image):
 	path = "./pictures"
@@ -82,6 +117,7 @@ def main():
 		pass
 
 	while not rospy.is_shutdown():
+		blobsCopy = copy.deepcopy(blobsData) #copy of blobs so it doesn't change
 		try:
 			color_image = bridge.imgmsg_to_cv2(colorImage, "bgr8")
 		except CvBridgeError, e:
