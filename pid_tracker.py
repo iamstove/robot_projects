@@ -6,16 +6,18 @@ import time
 from std_msgs.msg import String
 
 #we need not use constant command, assuming that the poling of the images is fast enough
-pub = rospy.Publisher('pid_command', (String, float), queue_size=10)
+pub = rospy.Publisher('pid_command', String, queue_size=10)
 
 pids = {} # should contain ([(time, value)], K_P and K_Ds)s.
 
 K_P_DEFAULT = 1.
 K_D_DEFAULT = 1.
 
-def pidCallback(data): 	# assume can and do use a tuple
-			# data should be of the form (string channel, float value [, float k_p, float k_d])
+def pidCallback(data): 	# data is a CSV string 
+			# data should be of the form "channel,value[,k_p,k_d]"
 	currtime = time.clock()
+	dsplit = data.data.split(",")
+	data = [dsplit[0]] + map(float, dsplit[1:])
 	channel = data[0]
 	value = 0
 	if not(channel in pids):
@@ -49,11 +51,11 @@ def pidCallback(data): 	# assume can and do use a tuple
 			# scream bloody mary
 			
 		value = k_p * curr + k_d * (curr - past) / (currtime - pastime)
-	pub.publish((channel, value))
+	pub.publish(channel + "," + str(value))
 	
 def pid_operate():
 	rospy.init_node('pid_tracker', anonymous = True)
-	rospy.Subscriber('pid_input', (String, float, float, float), pidCallback)
+	rospy.Subscriber('pid_input', String, pidCallback)
 	rospy.spin()
 
 if __name__ == '__main__':
