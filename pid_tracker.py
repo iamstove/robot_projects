@@ -3,6 +3,7 @@
 
 import rospy
 import time
+from std_msgs.msg import String
 
 #we need not use constant command, assuming that the poling of the images is fast enough
 pub = rospy.Publisher('pid_command', (String, float), queue_size=10)
