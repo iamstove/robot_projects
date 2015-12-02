@@ -60,12 +60,9 @@ def turn_away(loc):
 	while object_found:
 		truth_arr = []
 		pub.publish(curr_velocity) #hand off velocity to constant command
-		#print(str(curr_velocity))
 		horzArr = []
 		for pixel in range(0, 640, 20): #build an array of values across the center of the screen (20px width)
-			#sys.stderr.write(str(i) + "\n")
 			offset = (mid_height * depthData.step) + (pixel * 4)
-			#sys.stderr.write(str(offset)+"\n")
 			(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
 			horzArr.append(val)
 
@@ -84,7 +81,6 @@ def turn_away(loc):
 
 	curr_velocity.angular.z = 0
 	pub.publish(curr_velocity) #stop turning
-	#print(str(curr_velocity))
 	return False #now we know it's no longer turning
 
 
@@ -101,29 +97,18 @@ def main():
 	global depthData, isDepthReady, curr_velocity
 	rospy.init_node('depth_example', anonymous=True)
 	rospy.Subscriber("/camera/depth/image", Image, depthCallback, queue_size=10)
-	#sys.stderr.write("hello1\n")
-
 
 	while not isDepthReady and not rospy.is_shutdown():
 		pass
 
 	while not rospy.is_shutdown() and keepMove:
 		step = depthData.step
-		#sys.stderr.write("step: " +str(step)+ "\n")
 		horzArr = []
-		#tot = 0
 		for pixel in range(0, 640, 20): #build an array of values across the center of the screen (20px width)
-			#sys.stderr.write(str(i) + "\n")
 			offset = (mid_height * step) + (pixel * 4)
-			#sys.stderr.write(str(offset)+"\n")
 			(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
 			horzArr.append(val)
-			#tot += val
-			#sys.stderr.write("Distance: " + str(depthValue[i]) + "\n")
 
-		#tot /= 32
-		#sys.stderr.write("Distance: " + str(depthValue) + "\n")
-		#sys.stderr.write("Avg: " + str(tot) + "\n")
 
 		i = 0 #contains which column we're on
 		for value in horzArr:
@@ -140,7 +125,6 @@ def main():
 					#keep moving
 					curr_velocity.linear.x = .25
 					pub.publish(curr_velocity)
-					#print(str(curr_velocity))
 
 			i += 20
 
