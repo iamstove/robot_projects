@@ -61,8 +61,16 @@ def updateColorImage(data):
 
 def scanup(column):
 	"""returns false for too far and returns true for too close"""
+	global depthData
 	colarr = []
-	for pixel in range(479,239,-1): #spotcheck up every 15px, compile into array, (this will be 16 in length)
+	pixel = 475
+	stillNan = True
+	while stillNan:
+		offset = (pixel * depthData.step) + (column * 4)
+		(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
+		pixel-=5
+		stillNan = math.isnan(val) and pixel >= 240
+	for pixel in range(479,239,-1): 
 		offset = (pixel * depthData.step) + (column * 4)
 		(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
 		colarr.append(val)
@@ -130,11 +138,21 @@ def handleBlobs(): #this still needs to check to see if the picture card exists,
 			nowTakeSelfie = True
 
 
-def handleDistance(): 	# If it exists, this function collects Kinect's distance at followPoint and handles
+def handleMovement(): 	# If it exists, this function collects Kinect's distance at followPoint and handles
 			# the twist response and verbal response to seeing different environmental factors,
 			# recording followPoint->Kinect data in pastData and looking at the kinect depth field
 			# to figure out if we should panic and stop
 			# XXX: Move code from randmov for this, maybe? probably? ST: yes, it will handle the too close too far problem, it won't need the turn away stuff. Otherwise, if anything is less than 1m away, just stop
+	global depthData, followPoint, nowFollowBlob, timeCopy, blobCopy
+	if nowFollowBlob:
+		# Get the depth of the followPoint
+		## If we are nan now,
+		## if we became nan from large dist, waitUp
+		## elif we became nan from small dist, woahThere
+		# Append to the pastData array (timeCopy, depthFollowPoint): set depthFollowPoint to far or close if it's nan
+		
+		# set pastTurn and compare to currTurn
+	
 
 def selfie(image):
 	path = "./pictures"
