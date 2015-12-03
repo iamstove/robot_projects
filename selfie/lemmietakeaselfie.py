@@ -122,14 +122,8 @@ def selfie(image):
 	path = "./pictures"
 	for (path, dirs, files) in os.walk(path):
 		pass
-	filenum = int(files[-1][-6:-4]) + 1 #last file number + 1
-	if filenum < 10:
-		filename = "pict0" + filenum + ".jpg"
-	elif filenum < 100:
-		filename = "pict" + filenum + ".jpg"
-	else: #100 or greater
-		print("pictures full")
-		return
+	filenum = str(int(files[-1][-9:-4]) + 1) #last file number + 1
+	filename = "pict" + filenum.zfill(5) + ".jpg"
 	os.system('spd-say \"3\"')
 	rospy.sleep(1)
 	os.system('spd-say \"2\"')
