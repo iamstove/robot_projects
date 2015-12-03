@@ -27,7 +27,7 @@ color_namelist = ['Orange', 'Pink', 'Green', 'Blue'] # We'll use this for indexi
 
 def data_init():
 	global pastData
-	pastData = [] 
+	pastData = []
 
 def twist_init():
 	global curr_velocity
@@ -91,8 +91,9 @@ def parseBlobs(data)
 		curr_blobweights = [area, area, area]
 	has_new_blobinfo = True
 
-def handleBlobs():
+def handleBlobs(): #this still needs to check to see if the picture card exists, if it does then we just call the selfie funtion
 	global curr_blobweights
+	global followPoint
 	if not curr_blobweights[0][2] == -1 and not curr_blobweights[0][3] == -1:
 		# check if the blue and green are nearby relative to their areas
 		xdif = curr_blobweights[0][3] - curr_blobweights[0][2]
@@ -102,12 +103,20 @@ def handleBlobs():
 			# We have someone to follow
 			followPoint = (curr_blobweights[0][3] - xdif/2.0, curr_blobweights[1][3] - ydif/2.0)
 			hasFollow = True
-		
+	elif not curr_blobweights[0][0] == -1 and not curr_blobweights[0][1] == -1: # we think the camera card exists, orange and pink are there (pink inside orange)
+		xdif = curr_blobweights[0][0] - curr_blobweights[0][1]
+		ydif = curr_blobweights[1][0] - curr_blobweights[1][1]
+		dist = sqrt(xdif**2 + ydif**2)
+		if dist < curr_blobweights[2][1]: #the center of the two is inside of the pink area
+			#we have a camera card?
+			selfie()
+
+
 def handleDistance(): 	# If it exists, this function collects Kinect's distance at followPoint and handles
 			# the twist response and verbal response to seeing different environmental factors,
 			# recording followPoint->Kinect data in pastData and looking at the kinect depth field
 			# to figure out if we should panic and stop
-			# XXX: Move code from randmov for this, maybe? probably?
+			# XXX: Move code from randmov for this, maybe? probably? ST: yes, it will handle the too close too far problem, it won't need the turn away stuff. Otherwise, if anything is less than 1m away, just stop
 
 def selfie(image):
 	path = "./pictures"
@@ -120,6 +129,7 @@ def selfie(image):
 		filename = "pict" + filenum + ".jpg"
 	else: #100 or greater
 		print("pictures full")
+		return
 	os.system('spd-say \"3\"')
 	rospy.sleep(1)
 	os.system('spd-say \"2\"')
@@ -128,7 +138,7 @@ def selfie(image):
 	rospy.sleep(1)
 	os.system('spd-say \"Smile\"')
 	rospy.sleep(.25)
-	cv2.imwrite(filename, color_image, [cv2.IMWRITE_JPEG_QUALITY, 100])			
+	cv2.imwrite(filename, color_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
 
 def main():
 	global curr_velocity, blobData, blobTime isBlobReady, isColorImageReady, blobCopy, timeCopy
@@ -137,7 +147,7 @@ def main():
 	rospy.init_node('selife_stalker', anonymous = True) # Initialize this node
 	rospy.Subscriber('/blobs', Blobs, blobsCallback)
 	rospy.Subscriber("/camera/depth/image", Image, depthCallback, queue_size=10)
-	#rospy.Subscriber(<whoever does color images>, Image, updateColorImage, queue_size=10)
+	rospy.Subscriber("/camera/rgb/image_color", Image, updateColorImage, queue_size=10)
 	bridge = CvBridge()
 
 	while not isDepthReady and not rospy.is_shutdown() and not isBlobReady and not isColorImageReady:
@@ -157,7 +167,7 @@ def main():
 		parseBlobs(blobCopy)
 		handleBlobs()
 		isBlobReady = False # Finished processing this batch
-		
+
 		if nowFollowBlob:
 			pub.publish(curr_velocity)
 			#move forward, keeping the blob centered, adjusting speed with distance
