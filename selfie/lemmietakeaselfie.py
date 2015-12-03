@@ -26,7 +26,9 @@ pub = rospy.Publisher('kobuki_command', Twist, queue_size=10)
 color_namelist = ['Orange', 'Pink', 'Green', 'Blue'] # We'll use this for indexing different colors.
 
 def data_init():
-	global pastData
+	global pastData, nowFollowBlob, nowTakeSelfie
+	nowFollowBlob = False
+	nowTakeSelfie = False
 	pastData = []
 
 def twist_init():
@@ -92,8 +94,7 @@ def parseBlobs(data)
 	has_new_blobinfo = True
 
 def handleBlobs(): #this still needs to check to see if the picture card exists, if it does then we just call the selfie funtion
-	global curr_blobweights
-	global followPoint
+	global curr_blobweights, nowFollowBlob
 	if not curr_blobweights[0][2] == -1 and not curr_blobweights[0][3] == -1:
 		# check if the blue and green are nearby relative to their areas
 		xdif = curr_blobweights[0][3] - curr_blobweights[0][2]
@@ -102,14 +103,14 @@ def handleBlobs(): #this still needs to check to see if the picture card exists,
 		if distsq < curr_blobweights[2][3] * 4:
 			# We have someone to follow
 			followPoint = (curr_blobweights[0][3] - xdif/2.0, curr_blobweights[1][3] - ydif/2.0)
-			hasFollow = True
-	elif not curr_blobweights[0][0] == -1 and not curr_blobweights[0][1] == -1: # we think the camera card exists, orange and pink are there (pink inside orange)
+			nowFollowBlob = True
+	if not curr_blobweights[0][0] == -1 and not curr_blobweights[0][1] == -1: # we think the camera card exists, orange and pink are there (pink inside orange)
 		xdif = curr_blobweights[0][0] - curr_blobweights[0][1]
 		ydif = curr_blobweights[1][0] - curr_blobweights[1][1]
 		dist = sqrt(xdif**2 + ydif**2)
 		if dist < curr_blobweights[2][1]: #the center of the two is inside of the pink area
 			#we have a camera card?
-			selfie()
+			nowTakeSelfie = True
 
 
 def handleDistance(): 	# If it exists, this function collects Kinect's distance at followPoint and handles
@@ -135,10 +136,11 @@ def selfie(image):
 	cv2.imwrite(filename, color_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
 
 def main():
-	global curr_velocity, blobData, blobTime isBlobReady, isColorImageReady, blobCopy, timeCopy
+	global curr_velocity, blobData, blobTime, isBlobReady, isColorImageReady, blobCopy, timeCopy
+	global nowFollowBlob, nowTakeSelfie
 	twist_init()
 	data_init()
-	rospy.init_node('selife_stalker', anonymous = True) # Initialize this node
+	rospy.init_node('selfie_stalker', anonymous = True) # Initialize this node
 	rospy.Subscriber('/blobs', Blobs, blobsCallback)
 	rospy.Subscriber("/camera/depth/image", Image, depthCallback, queue_size=10)
 	rospy.Subscriber("/camera/rgb/image_color", Image, updateColorImage, queue_size=10)
@@ -162,10 +164,11 @@ def main():
 		handleBlobs()
 		isBlobReady = False # Finished processing this batch
 
-		if nowFollowBlob:
+		if nowFollowBlob and not nowTakeSelfie:
 			pub.publish(curr_velocity)
 			#move forward, keeping the blob centered, adjusting speed with distance
-			#check for obsticles
+			#check for obstacles
+			nowFollowBlob = False
 		#if picture blob
 			#take picture
 			selfie(color_image)
