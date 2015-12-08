@@ -11,5 +11,6 @@
 		<include file ="$(find openni_launch)/launch/openni.launch"/>
 
 		<!-- command: rosrun mypackage lemmietakeaselfie.py -->
-		<node name="selfie" pkg="mypackage" type="lemmietakeaselfie.py"/>
+		<node name="constant_command" pkg="mypackage" type="constant_command.py"/>
+		<node name="selfie_stalker" pkg="mypackage" type="lemmietakeaselfie.py"/>
 </launch>

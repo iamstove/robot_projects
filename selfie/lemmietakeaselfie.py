@@ -8,28 +8,31 @@ from std_msgs.msg import Empty
 from std_msgs.msg import String
 import sys
 import math
+import random
 import time
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
 from cmvision.msg import Blobs, Blob
 import copy
 
-isDepthReady = False
-isBlobReady = True
 colorImage = Image()
-isColorImageReady = False
-keepMove = True
 blobsData = Blobs()
 depthImage = Image()
-mid_height = 240
 pub = rospy.Publisher('kobuki_command', Twist, queue_size=10)
 color_namelist = ['Orange', 'Pink', 'Green', 'Blue'] # We'll use this for indexing different colors.
 
 def data_init():
-	global pastData, nowFollowBlob, nowTakeSelfie
+	global pastData, nowFollowBlob, nowTakeSelfie, depthAverage, dirAverage, isDepthReady, isBlobReady, isColorImageReady
+	global followPoint
 	nowFollowBlob = False
 	nowTakeSelfie = False
-	pastData = [(time.clock(), 0.0)]
+	isDepthReady = False
+	isBlobReady = False
+	isColorImageReady = False
+	depthAverage = 0.0
+	dirAverage = 0.0
+	followPoint = (320, 240)
+	pastData = [(time.clock(), 0.0, followPoint)]
 
 def twist_init():
 	global curr_velocity
@@ -80,7 +83,7 @@ def scanFront():
 	
 	return nans
 	
-def parseBlobs(data)
+def parseBlobs(data):
 	global curr_blobweights
 	global has_new_blobinfo
 	global fd
@@ -115,20 +118,20 @@ def parseBlobs(data)
 	has_new_blobinfo = True
 
 def handleBlobs(): #this still needs to check to see if the picture card exists, if it does then we just call the selfie funtion
-	global curr_blobweights, nowFollowBlob
+	global curr_blobweights, nowFollowBlob, followPoint
 	if not curr_blobweights[0][2] == -1 and not curr_blobweights[0][3] == -1:
 		# check if the blue and green are nearby relative to their areas
 		xdif = curr_blobweights[0][3] - curr_blobweights[0][2]
 		ydif = curr_blobweights[1][3] - curr_blobweights[1][2]
 		distsq = xdif*xdif + ydif*ydif
-		if distsq < curr_blobweights[2][3] * 4:
+		if distsq < curr_blobweights[2][3] * 16:
 			# We have someone to follow
 			followPoint = (curr_blobweights[0][3] - xdif/2.0, curr_blobweights[1][3] - ydif/2.0)
 			nowFollowBlob = True
 	if not curr_blobweights[0][0] == -1 and not curr_blobweights[0][1] == -1: # we think the camera card exists, orange and pink are there (pink inside orange)
 		xdif = curr_blobweights[0][0] - curr_blobweights[0][1]
 		ydif = curr_blobweights[1][0] - curr_blobweights[1][1]
-		dist = sqrt(xdif**2 + ydif**2)
+		dist = math.sqrt(xdif**2 + ydif**2)
 		if dist < curr_blobweights[2][1]: #the center of the two is inside of the pink area
 			#we have a camera card?
 			nowTakeSelfie = True
@@ -140,15 +143,16 @@ def handleMovement(): 	# If it exists, this function collects Kinect's distance 
 			# to figure out if we should panic and stop
 			# XXX: Move code from randmov for this, maybe? probably? ST: yes, it will handle the too close too far problem, it won't need the turn away stuff. Otherwise, if anything is less than 1m away, just stop
 	global depthData, followPoint, nowFollowBlob, timeCopy, blobCopy, depthAverage, dirAverage, curr_velocity
-	global hasObstacle, waitUp, woahThere
+	global hasObstacle, waitUp, woahThere, pastData
 	
-	hasObstacle = scanFront() < 10
+	hasObstacle = scanFront() > 512
 	
-	numPointsAveraged = 10
+	numPointsAveraged = 30
+	de = 1.3
 	
 	if nowFollowBlob and not hasObstacle:
 		# Get the depth of the followPoint
-		(x, y) = followPoint 
+		(x, y) = (int(followPoint[0]), int(followPoint[1])) 
 		offset = (y * depthData.step) + (x * 4)
 		(followDepth,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
 			
@@ -159,27 +163,28 @@ def handleMovement(): 	# If it exists, this function collects Kinect's distance 
 			if pastData[-1][1] > 5.0:
 				pastData.append((timeCopy, 7.0, followPoint))
 				waitUp = True
-			elif pastData[-1][1] < 1.0:
+			elif pastData[-1][1] < 0.5:
 				pastData.append((timeCopy, 0.0, followPoint))
 				woahThere = True
 			else:
-				pastData.append((timeCopy, 3.0, followPoint)) #arbitrary
-			
+				pastData.append((timeCopy, dee, followPoint)) #arbitrary
+		else:
+			pastData.append((timeCopy, followDepth, followPoint))
 		# Append to the pastData array (timeCopy, depthFollowPoint): set depthFollowPoint to far or close if it's nan
 		
 		# set pastTurn and compare to currTurn
-	else: # else we have no followPoint or have encountered an obstacle, so append a zero.
-		pastData.append((timeCopy, 0.0, (320, 240)))
+	else: # else we have no followPoint or have encountered an obstacle, so append a nothing.
+		pastData.append((timeCopy, dee, (320, 240)))
 		
-	if len(pastData) <= numPointsAveraged:
+	if len(pastData) <= numPointsAveraged + 1:
 		depthAverage += pastData[-1][1] / float(numPointsAveraged)
 		dirAverage += pastData[-1][2][0] / (640.0 * numPointsAveraged)
 	else: # we have numPointsAveraged points.  Also remove the first when you add the last.
 		depthAverage += (pastData[-1][1] - pastData[-1 - numPointsAveraged][1]) / float(numPointsAveraged)
 		dirAverage += (pastData[-1][2][0] - pastData[-1 - numPointsAveraged][2][0]) / (640.0 * numPointsAveraged)
 		
-	curr_velocity.linear.x = (depthAverage - 3.0)/3		
-	curr_velocity.angular.z = (dirAverage - 0.5)*2.0
+	curr_velocity.linear.x = (depthAverage - dee)/2		
+	curr_velocity.angular.z = -(dirAverage - 0.5)*2.0
 
 def selfie(image):
 	path = "./pictures"
@@ -199,7 +204,7 @@ def selfie(image):
 
 def main():
 	global curr_velocity, blobData, blobTime, isBlobReady, isColorImageReady, blobCopy, timeCopy
-	global nowFollowBlob, nowTakeSelfie
+	global nowFollowBlob, nowTakeSelfie, followPoint, depthAverage, dirAverage
 	twist_init()
 	data_init()
 	rospy.init_node('selfie_stalker', anonymous = True) # Initialize this node
@@ -208,7 +213,7 @@ def main():
 	rospy.Subscriber("/camera/rgb/image_color", Image, updateColorImage, queue_size=10)
 	bridge = CvBridge()
 
-	while not isDepthReady and not rospy.is_shutdown() and not isBlobReady and not isColorImageReady:
+	while (not isDepthReady or not isBlobReady or not isColorImageReady) and not rospy.is_shutdown():
 		pass
 
 	while not rospy.is_shutdown():
@@ -226,8 +231,17 @@ def main():
 		handleBlobs()
 		isBlobReady = False # Finished processing this batch
 		handleMovement()
-	
-		if nowFollowBlob and not nowTakeSelfie:
+		
+		if random.random() > 0.9:
+			sys.stderr.write("nFB:" + str(nowFollowBlob)[0] +
+					 " fP:" + str(followPoint) +	
+					 " c_vX:" + str(curr_velocity.linear.x) + 
+					 " c_vZ:" + str(curr_velocity.angular.z) +
+					 " hOb:" + str(hasObstacle) +
+					 " dpAv:" + str(depthAverage) +
+					 " drAv:" + str(dirAverage) +
+					 "\n")
+		if nowFollowBlob:
 			pub.publish(curr_velocity)
 			#move forward, keeping the blob centered, adjusting speed with distance
 			#check for obstacles
