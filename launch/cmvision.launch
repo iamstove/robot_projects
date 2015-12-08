@@ -1,7 +1,7 @@
 <launch>
   <!-- Location of the cmvision color file -->
   <param name="cmvision/color_file" type="string" 
-         value="/home/student/cs1567/src/mypackage/scripts/soccercolors.txt" />
+         value="/home/student/cs1567/src/mypackage/scripts/selfiecolors.txt" />
 
   <!-- Turn debug output on or off -->
   <param name="cmvision/debug_on" type="bool" value="true"/>
@@ -18,5 +18,5 @@
   <!-- Color bandwidth: Bigger = smoother image-->
   <param name="cmvision/color_radius_pix" type="double" value="40.0"/>
 
-  <node name="cmvision" pkg="cmvision" type="cmvision" args="image:=/v4l/camera/image_raw" output="screen" />
+  <node name="cmvision" pkg="cmvision" type="cmvision" args="image:=/camera/rgb/image_color" output="screen" />
 </launch>
