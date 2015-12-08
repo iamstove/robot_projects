@@ -29,7 +29,7 @@ def data_init():
 	global pastData, nowFollowBlob, nowTakeSelfie
 	nowFollowBlob = False
 	nowTakeSelfie = False
-	pastData = []
+	pastData = [(time.clock(), 0.0)]
 
 def twist_init():
 	global curr_velocity
@@ -59,31 +59,27 @@ def updateColorImage(data):
 	colorImage = data
 	isColorImageReady = True
 
-def scanup(column):
-	"""returns false for too far and returns true for too close"""
+def scanFront():
+	'''Returns: 	The number of nans in front'''
+	
 	global depthData
-	colarr = []
-	pixel = 475
-	stillNan = True
-	while stillNan:
-		offset = (pixel * depthData.step) + (column * 4)
-		(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
-		pixel-=5
-		stillNan = math.isnan(val) and pixel >= 240
-	for pixel in range(479,239,-1): 
-		offset = (pixel * depthData.step) + (column * 4)
-		(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
-		colarr.append(val)
+	# Assert that we have depthData and it's new / current
+	
+	gridStep = 10
 
-	for d in range(240):
-		if (d+1) == len(colarr): #check if our step will put us out of bounds
-			break
-		else:
-			if colarr[d] > 5 and math.isnan(colarr[d+1]): #this would be the case where our nan is far away
-				return False
-			elif colarr[d] < 1.5 and math.isnan(colarr[d+1]): #the case when we should stop and turn
-				return True
-
+	nans = 0
+	
+	# Ranges should be (0, 640), (400, 480)
+	for x in range(0, 640, gridStep):
+		for y in range(400, 480, gridStep):
+			# Check the depth of (x, y)
+			offset = (y * depthData.step) + (x * 4)
+			(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
+			if math.isnan(val):
+				nans = nans + 1
+	
+	return nans
+	
 def parseBlobs(data)
 	global curr_blobweights
 	global has_new_blobinfo
@@ -143,16 +139,47 @@ def handleMovement(): 	# If it exists, this function collects Kinect's distance 
 			# recording followPoint->Kinect data in pastData and looking at the kinect depth field
 			# to figure out if we should panic and stop
 			# XXX: Move code from randmov for this, maybe? probably? ST: yes, it will handle the too close too far problem, it won't need the turn away stuff. Otherwise, if anything is less than 1m away, just stop
-	global depthData, followPoint, nowFollowBlob, timeCopy, blobCopy
-	if nowFollowBlob:
+	global depthData, followPoint, nowFollowBlob, timeCopy, blobCopy, depthAverage, dirAverage, curr_velocity
+	global hasObstacle, waitUp, woahThere
+	
+	hasObstacle = scanFront() < 10
+	
+	numPointsAveraged = 10
+	
+	if nowFollowBlob and not hasObstacle:
 		# Get the depth of the followPoint
-		## If we are nan now,
-		## if we became nan from large dist, waitUp
-		## elif we became nan from small dist, woahThere
+		(x, y) = followPoint 
+		offset = (y * depthData.step) + (x * 4)
+		(followDepth,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
+			
+		# Append timeCopy and followDepth, modified:
+	
+		# If we are nan now,
+		if math.isnan(followDepth):	
+			if pastData[-1][1] > 5.0:
+				pastData.append((timeCopy, 7.0, followPoint))
+				waitUp = True
+			elif pastData[-1][1] < 1.0:
+				pastData.append((timeCopy, 0.0, followPoint))
+				woahThere = True
+			else:
+				pastData.append((timeCopy, 3.0, followPoint)) #arbitrary
+			
 		# Append to the pastData array (timeCopy, depthFollowPoint): set depthFollowPoint to far or close if it's nan
 		
 		# set pastTurn and compare to currTurn
-	
+	else: # else we have no followPoint or have encountered an obstacle, so append a zero.
+		pastData.append((timeCopy, 0.0, (320, 240)))
+		
+	if len(pastData) <= numPointsAveraged:
+		depthAverage += pastData[-1][1] / float(numPointsAveraged)
+		dirAverage += pastData[-1][2][0] / (640.0 * numPointsAveraged)
+	else: # we have numPointsAveraged points.  Also remove the first when you add the last.
+		depthAverage += (pastData[-1][1] - pastData[-1 - numPointsAveraged][1]) / float(numPointsAveraged)
+		dirAverage += (pastData[-1][2][0] - pastData[-1 - numPointsAveraged][2][0]) / (640.0 * numPointsAveraged)
+		
+	curr_velocity.linear.x = (depthAverage - 3.0)/3		
+	curr_velocity.angular.z = (dirAverage - 0.5)*2.0
 
 def selfie(image):
 	path = "./pictures"
@@ -198,13 +225,14 @@ def main():
 		parseBlobs(blobCopy)
 		handleBlobs()
 		isBlobReady = False # Finished processing this batch
-
+		handleMovement()
+	
 		if nowFollowBlob and not nowTakeSelfie:
 			pub.publish(curr_velocity)
 			#move forward, keeping the blob centered, adjusting speed with distance
 			#check for obstacles
 			nowFollowBlob = False
-		#if picture blob
+		elif nowTakeSelfie:
 			#take picture
 			selfie(color_image)
 
@@ -214,53 +242,3 @@ def main():
 if __name__ == '__main__':
 	main()
 
-
-
-
-"""def main():
-	twist_init()
-	global depthData, isDepthReady, curr_velocity
-	rospy.init_node('depth_example', anonymous=True)
-	rospy.Subscriber("/camera/depth/image", Image, depthCallback, queue_size=10)
-	#sys.stderr.write("hello1\n")
-
-
-	while not isDepthReady and not rospy.is_shutdown():
-		pass
-
-	while not rospy.is_shutdown() and keepMove:
-		step = depthData.step
-		#sys.stderr.write("step: " +str(step)+ "\n")
-		horzArr = []
-		#tot = 0
-		for pixel in range(0, 640, 20): #build an array of values across the center of the screen (20px width)
-			#sys.stderr.write(str(i) + "\n")
-			offset = (mid_height * step) + (pixel * 4)
-			#sys.stderr.write(str(offset)+"\n")
-			(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
-			horzArr.append(val)
-			#tot += val
-			#sys.stderr.write("Distance: " + str(depthValue[i]) + "\n")
-
-		#tot /= 32
-		#sys.stderr.write("Distance: " + str(depthValue) + "\n")
-		#sys.stderr.write("Avg: " + str(tot) + "\n")
-
-		i = 0 #contains which column we're on
-		for value in horzArr:
-			if math.isnan(value): #check our spotchecks for nans
-				scanup(i)
-			else: #we have a real number, we want to see if its less than 1
-				if value < 1:
-					#stop and turn until we don't see it anymore
-					still_turning = True
-					still_turning = turn_away(i)
-					if still_turning: #wait until it's no longer turning
-						print "Massssssive error"
-				else:
-					#keep moving
-					curr_velocity.linear.x = .25
-					pub.publish(curr_velocity)
-					#print(str(curr_velocity))
-
-			i += 20"""
