@@ -148,7 +148,7 @@ def handleMovement(): 	# If it exists, this function collects Kinect's distance 
 	hasObstacle = scanFront() > 512
 	
 	numPointsAveraged = 30
-	de = 1.3
+	dee = 1.3
 	
 	if nowFollowBlob and not hasObstacle:
 		# Get the depth of the followPoint
@@ -241,7 +241,7 @@ def main():
 					 " dpAv:" + str(depthAverage) +
 					 " drAv:" + str(dirAverage) +
 					 "\n")
-		if nowFollowBlob:
+		if nowFollowBlob and not nowTakeSelfie:
 			pub.publish(curr_velocity)
 			#move forward, keeping the blob centered, adjusting speed with distance
 			#check for obstacles
