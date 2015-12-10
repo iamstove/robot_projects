@@ -131,7 +131,7 @@ def handleBlobs(): #this still needs to check to see if the picture card exists,
 	if not curr_blobweights[0][0] == -1 and not curr_blobweights[0][1] == -1: # we think the camera card exists, orange and pink are there (pink inside orange)
 		xdif = curr_blobweights[0][0] - curr_blobweights[0][1]
 		ydif = curr_blobweights[1][0] - curr_blobweights[1][1]
-		dist = math.sqrt(xdif**2 + ydif**2)
+		distsq = xdif*xdif + ydif*ydif
 		if dist < curr_blobweights[2][1]: #the center of the two is inside of the pink area
 			#we have a camera card?
 			nowTakeSelfie = True
@@ -248,6 +248,8 @@ def main():
 			nowFollowBlob = False
 		elif nowTakeSelfie:
 			#take picture
+			twist_init()
+			pub.publish(curr_velocity)
 			selfie(color_image)
 
 
