@@ -88,10 +88,10 @@ def updateColorImage(data):
 	colorImage = data
 	isColorImageReady = True
 
-def scanMid(data):
+def scanMid():
 	'''scans across the center of an image, and returns a list of depths'''
 	if isDepthReady:
-		depthCopy = copy.deepcopy(data)
+		depthCopy = depthData
 		midstep = 10
 		horzArr = []
 		for pixel in range(0, 640, midstep): #build an array of values across the center of the screen (midstep px apart)
@@ -102,7 +102,6 @@ def scanMid(data):
 		handleMiddle(horzArr)
 	else:
 		pass
-		return False
 
 
 def scanFront():
@@ -173,7 +172,9 @@ def handleMiddle(middleList):
 	spacePoints += mapList
 
 def mapPoints(mapList):
-
+	global win
+	for point in mapList:
+		Point(int(point[0]*100), int(point[1]*100)).draw(win)
 
 def handleBlobs(): #this still needs to check to see if the picture card exists, if it does then we just call the selfie funtion
 	global curr_blobweights, nowFollowBlob, followPoint
@@ -263,6 +264,8 @@ def selfie(image):
 def main():
 	global curr_velocity, blobData, blobTime, isBlobReady, isColorImageReady, blobCopy, timeCopy
 	global nowFollowBlob, nowTakeSelfie, followPoint, depthAverage, dirAverage
+	global win
+	win = Graphwin()
 	twist_init()
 	data_init()
 	rospy.init_node('selfie_stalker', anonymous = True) # Initialize this node
@@ -272,15 +275,18 @@ def main():
 	rospy.Subscriber("/camera/rgb/image_color", Image, updateColorImage, queue_size=10)
 	bridge = CvBridge()
 
-	while (not isDepthReady or not isBlobReady or not isColorImageReady) and not rospy.is_shutdown():
+	while (not isDepthReady or not isBlobReady or not isColorImageReady or not isOdomReady) and not rospy.is_shutdown():
 		pass
 
 	while not rospy.is_shutdown():
 		try:
 			color_image = bridge.imgmsg_to_cv2(colorImage, "bgr8")
+			scanMid(
 		except CvBridgeError, e:
 			print e
 
+		scanMid()
+		
 		#check blobs
 		while not isBlobReady: # XXX: Fast loop. Slow it down?
 			pass
