@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
 import rospy
+from graphics import *
 from sensor_msgs.msg import Image
 from struct import unpack
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Empty
 from std_msgs.msg import String
+from tf.transforms import euler_from_quaternion
 import sys
 import math
 import random
@@ -14,6 +16,7 @@ import cv2
 from cv_bridge import CvBridge, CvBridgeError
 from cmvision.msg import Blobs, Blob
 import copy
+from nav_msgs.msg import Odometry
 
 colorImage = Image()
 blobsData = Blobs()
@@ -21,10 +24,17 @@ depthImage = Image()
 pub = rospy.Publisher('kobuki_command', Twist, queue_size=10)
 color_namelist = ['Orange', 'Pink', 'Green', 'Blue'] # We'll use this for indexing different colors.
 
+
+
+
 def data_init():
 	global pastData, nowFollowBlob, nowTakeSelfie, depthAverage, dirAverage, isDepthReady, isBlobReady, isColorImageReady
 	global followPoint
-	global spacePoints
+	global spacePoints = []
+	global del_x, del_r, isOdomReady
+	del_x = (0, 0)
+	del_r = 0
+	isOdomReady = False
 	nowFollowBlob = False
 	nowTakeSelfie = False
 	isDepthReady = False
@@ -35,6 +45,20 @@ def data_init():
 	followPoint = (320, 240)
 	pastData = [(time.clock(), 0.0, followPoint)]
 
+def odomCallback():
+	global del_x, del_r, isOdomReady
+	q = [data.pose.pose.orientation.x,
+	data.pose.pose.orientation.y,
+	data.pose.pose.orientation.z,
+	data.pose.pose.orientation.w]
+	
+	roll, pitch, yaw = euler_from_quaternion(q)
+	
+	del_x = (data.pose.pose.position.x, data.pose.pose.position.y)
+	del_r = yaw
+	
+	isOdomReady = True	
+		
 def twist_init():
 	global curr_velocity
 	curr_velocity = Twist()
@@ -82,7 +106,10 @@ def scanFront():
 			if math.isnan(val):
 				nans = nans + 1
 	
+
 	return nans
+
+	
 	
 def parseBlobs(data):
 	global curr_blobweights
@@ -117,6 +144,22 @@ def parseBlobs(data):
 	else:
 		curr_blobweights = [area, area, area]
 	has_new_blobinfo = True
+
+def handleMiddle(middleList):
+	global spacePoints
+	mapList = []
+	for point in middleList:
+		if not math.isnan(point[1]):
+			theta = math.atan((320.0 - point[0]) / 320.0 * math.tan(0.5))
+			thetap = theta + yaw
+			dvec_x = (math.cos(thetap) * point[1], math.sin(thetap) * point[1])
+			vec_x = (dvec_x[0] + del_x[0], dvec_x[1] + del_x[1])
+			mapList.append(vec_x)
+			mapPoints(mapList)
+	spacePoints += mapList
+
+def mapPoints(mapList):
+	
 
 def handleBlobs(): #this still needs to check to see if the picture card exists, if it does then we just call the selfie funtion
 	global curr_blobweights, nowFollowBlob, followPoint
@@ -209,6 +252,7 @@ def main():
 	twist_init()
 	data_init()
 	rospy.init_node('selfie_stalker', anonymous = True) # Initialize this node
+	rospy.Subscriber('/odom', Odometry, odomCallback)
 	rospy.Subscriber('/blobs', Blobs, blobsCallback)
 	rospy.Subscriber("/camera/depth/image", Image, depthCallback, queue_size=10)
 	rospy.Subscriber("/camera/rgb/image_color", Image, updateColorImage, queue_size=10)
