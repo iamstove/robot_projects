@@ -74,6 +74,7 @@ def depthCallback(data):
 	global depthData, isDepthReady
 	depthData = data
 	isDepthReady = True
+	scanMid(depthData)
 
 def blobsCallback(data):
 	"""updates the blobs"""
@@ -87,16 +88,33 @@ def updateColorImage(data):
 	colorImage = data
 	isColorImageReady = True
 
+def scanMid(data):
+	'''scans across the center of an image, and returns a list of depths'''
+	if isDepthReady:
+		depthCopy = copy.deepcopy(data)
+		midstep = 10
+		horzArr = []
+		for pixel in range(0, 640, midstep): #build an array of values across the center of the screen (midstep px apart)
+			offset = (240 * step) + (pixel * 4)
+			(val,) = unpack('f', depthCopy.data[offset] + depthCopy.data[offset+1] + depthCopy.data[offset+2] + depthCopy.data[offset+3])
+			horzArr.append((pixel,val))
+
+		return horzArr
+	else:
+		pass
+		return False
+
+
 def scanFront():
 	'''Returns: 	The number of nans in front'''
-	
+
 	global depthData
 	# Assert that we have depthData and it's new / current
-	
+
 	gridStep = 10
 
 	nans = 0
-	
+
 	# Ranges should be (0, 640), (400, 480)
 	for x in range(0, 640, gridStep):
 		for y in range(400, 480, gridStep):
@@ -105,12 +123,8 @@ def scanFront():
 			(val,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
 			if math.isnan(val):
 				nans = nans + 1
-	
-
 	return nans
 
-	
-	
 def parseBlobs(data):
 	global curr_blobweights
 	global has_new_blobinfo
@@ -188,22 +202,22 @@ def handleMovement(): 	# If it exists, this function collects Kinect's distance 
 			# XXX: Move code from randmov for this, maybe? probably? ST: yes, it will handle the too close too far problem, it won't need the turn away stuff. Otherwise, if anything is less than 1m away, just stop
 	global depthData, followPoint, nowFollowBlob, timeCopy, blobCopy, depthAverage, dirAverage, curr_velocity
 	global hasObstacle, waitUp, woahThere, pastData
-	
+
 	hasObstacle = scanFront() > 512
-	
+
 	numPointsAveraged = 30
 	dee = 1.3
-	
+
 	if nowFollowBlob and not hasObstacle:
 		# Get the depth of the followPoint
-		(x, y) = (int(followPoint[0]), int(followPoint[1])) 
+		(x, y) = (int(followPoint[0]), int(followPoint[1]))
 		offset = (y * depthData.step) + (x * 4)
 		(followDepth,) = unpack('f', depthData.data[offset] + depthData.data[offset+1] + depthData.data[offset+2] + depthData.data[offset+3])
-			
+
 		# Append timeCopy and followDepth, modified:
-	
+
 		# If we are nan now,
-		if math.isnan(followDepth):	
+		if math.isnan(followDepth):
 			if pastData[-1][1] > 5.0:
 				pastData.append((timeCopy, 7.0, followPoint))
 				waitUp = True
@@ -215,19 +229,19 @@ def handleMovement(): 	# If it exists, this function collects Kinect's distance 
 		else:
 			pastData.append((timeCopy, followDepth, followPoint))
 		# Append to the pastData array (timeCopy, depthFollowPoint): set depthFollowPoint to far or close if it's nan
-		
+
 		# set pastTurn and compare to currTurn
 	else: # else we have no followPoint or have encountered an obstacle, so append a nothing.
 		pastData.append((timeCopy, dee, (320, 240)))
-		
+
 	if len(pastData) <= numPointsAveraged + 1:
 		depthAverage += pastData[-1][1] / float(numPointsAveraged)
 		dirAverage += pastData[-1][2][0] / (640.0 * numPointsAveraged)
 	else: # we have numPointsAveraged points.  Also remove the first when you add the last.
 		depthAverage += (pastData[-1][1] - pastData[-1 - numPointsAveraged][1]) / float(numPointsAveraged)
 		dirAverage += (pastData[-1][2][0] - pastData[-1 - numPointsAveraged][2][0]) / (640.0 * numPointsAveraged)
-		
-	curr_velocity.linear.x = (depthAverage - dee)/2		
+
+	curr_velocity.linear.x = (depthAverage - dee)/2
 	curr_velocity.angular.z = -(dirAverage - 0.5)*2.0
 
 def selfie(image):
@@ -279,8 +293,8 @@ def main():
 		handleFront()
 		if random.random() > 0.9:
 			sys.stderr.write("nFB:" + str(nowFollowBlob)[0] +
-					 " fP:" + str(followPoint) +	
-					 " c_vX:" + str(curr_velocity.linear.x) + 
+					 " fP:" + str(followPoint) +
+					 " c_vX:" + str(curr_velocity.linear.x) +
 					 " c_vZ:" + str(curr_velocity.angular.z) +
 					 " hOb:" + str(hasObstacle) +
 					 " dpAv:" + str(depthAverage) +
@@ -302,4 +316,3 @@ def main():
 
 if __name__ == '__main__':
 	main()
-
