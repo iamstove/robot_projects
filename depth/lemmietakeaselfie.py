@@ -51,14 +51,14 @@ def odomCallback():
 	data.pose.pose.orientation.y,
 	data.pose.pose.orientation.z,
 	data.pose.pose.orientation.w]
-	
+
 	roll, pitch, yaw = euler_from_quaternion(q)
-	
+
 	del_x = (data.pose.pose.position.x, data.pose.pose.position.y)
 	del_r = yaw
-	
-	isOdomReady = True	
-		
+
+	isOdomReady = True
+
 def twist_init():
 	global curr_velocity
 	curr_velocity = Twist()
@@ -99,7 +99,7 @@ def scanMid(data):
 			(val,) = unpack('f', depthCopy.data[offset] + depthCopy.data[offset+1] + depthCopy.data[offset+2] + depthCopy.data[offset+3])
 			horzArr.append((pixel,val))
 
-		return horzArr
+		handleMiddle(horzArr)
 	else:
 		pass
 		return False
@@ -173,7 +173,7 @@ def handleMiddle(middleList):
 	spacePoints += mapList
 
 def mapPoints(mapList):
-	
+
 
 def handleBlobs(): #this still needs to check to see if the picture card exists, if it does then we just call the selfie funtion
 	global curr_blobweights, nowFollowBlob, followPoint
