@@ -73,7 +73,7 @@ def scanMid(data):
 		for pixel in range(0, 640, midstep): #build an array of values across the center of the screen (midstep px apart)
 			offset = (240 * step) + (pixel * 4)
 			(val,) = unpack('f', depthCopy.data[offset] + depthCopy.data[offset+1] + depthCopy.data[offset+2] + depthCopy.data[offset+3])
-			horzArr.append(val)
+			horzArr.append((pixel,val))
 
 		return horzArr
 	else:
