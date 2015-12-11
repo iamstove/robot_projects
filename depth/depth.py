@@ -7,7 +7,7 @@ from struct import unpack
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Empty
 from std_msgs.msg import String
-from tf.transforms import euler_from_quaternion
+from tf.transformations import euler_from_quaternion
 import sys
 import math
 import random
@@ -22,7 +22,7 @@ colorImage = Image()
 blobsData = Blobs()
 depthImage = Image()
 pub = rospy.Publisher('kobuki_command', Twist, queue_size=10)
-color_namelist = ['Orange', 'Pink', 'Green', 'Blue'] # We'll use this for indexing different colors.
+color_namelist = ['Green', 'Blue', 'Orange', 'Pink'] # We'll use this for indexing different colors.
 
 
 
@@ -30,10 +30,11 @@ color_namelist = ['Orange', 'Pink', 'Green', 'Blue'] # We'll use this for indexi
 def data_init():
 	global pastData, nowFollowBlob, nowTakeSelfie, depthAverage, dirAverage, isDepthReady, isBlobReady, isColorImageReady
 	global followPoint
-	global spacePoints = []
+	global spacePoints
 	global del_x, del_r, isOdomReady
 	del_x = (0, 0)
 	del_r = 0
+	spacePoints = []
 	isOdomReady = False
 	nowFollowBlob = False
 	nowTakeSelfie = False
@@ -45,7 +46,7 @@ def data_init():
 	followPoint = (320, 240)
 	pastData = [(time.clock(), 0.0, followPoint)]
 
-def odomCallback():
+def odomCallback(data):
 	global del_x, del_r, isOdomReady
 	q = [data.pose.pose.orientation.x,
 	data.pose.pose.orientation.y,
@@ -74,7 +75,6 @@ def depthCallback(data):
 	global depthData, isDepthReady
 	depthData = data
 	isDepthReady = True
-	scanMid(depthData)
 
 def blobsCallback(data):
 	"""updates the blobs"""
@@ -95,7 +95,7 @@ def scanMid():
 		midstep = 10
 		horzArr = []
 		for pixel in range(0, 640, midstep): #build an array of values across the center of the screen (midstep px apart)
-			offset = (240 * step) + (pixel * 4)
+			offset = (240 * depthData.step) + (pixel * 4)
 			(val,) = unpack('f', depthCopy.data[offset] + depthCopy.data[offset+1] + depthCopy.data[offset+2] + depthCopy.data[offset+3])
 			horzArr.append((pixel,val))
 
@@ -164,7 +164,7 @@ def handleMiddle(middleList):
 	for point in middleList:
 		if not math.isnan(point[1]):
 			theta = math.atan((320.0 - point[0]) / 320.0 * math.tan(0.5))
-			thetap = theta + yaw
+			thetap = theta + del_r
 			dvec_x = (math.cos(thetap) * point[1], math.sin(thetap) * point[1])
 			vec_x = (dvec_x[0] + del_x[0], dvec_x[1] + del_x[1])
 			mapList.append(vec_x)
@@ -174,7 +174,7 @@ def handleMiddle(middleList):
 def mapPoints(mapList):
 	global win
 	for point in mapList:
-		Point(int(point[0]*100), int(point[1]*100)).draw(win)
+		win.plot(int(point[0]*100), int(point[1]*100))
 
 def handleBlobs(): #this still needs to check to see if the picture card exists, if it does then we just call the selfie funtion
 	global curr_blobweights, nowFollowBlob, followPoint
@@ -183,7 +183,7 @@ def handleBlobs(): #this still needs to check to see if the picture card exists,
 		xdif = curr_blobweights[0][3] - curr_blobweights[0][2]
 		ydif = curr_blobweights[1][3] - curr_blobweights[1][2]
 		distsq = xdif*xdif + ydif*ydif
-		if distsq < curr_blobweights[2][3] * 16:
+		if distsq < curr_blobweights[2][3] * 256:
 			# We have someone to follow
 			followPoint = (curr_blobweights[0][3] - xdif/2.0, curr_blobweights[1][3] - ydif/2.0)
 			nowFollowBlob = True
@@ -191,7 +191,7 @@ def handleBlobs(): #this still needs to check to see if the picture card exists,
 		xdif = curr_blobweights[0][0] - curr_blobweights[0][1]
 		ydif = curr_blobweights[1][0] - curr_blobweights[1][1]
 		distsq = xdif*xdif + ydif*ydif
-		if dist < curr_blobweights[2][1]: #the center of the two is inside of the pink area
+		if distsq < curr_blobweights[2][1]: #the center of the two is inside of the pink area
 			#we have a camera card?
 			nowTakeSelfie = True
 
@@ -243,7 +243,7 @@ def handleMovement(): 	# If it exists, this function collects Kinect's distance 
 		dirAverage += (pastData[-1][2][0] - pastData[-1 - numPointsAveraged][2][0]) / (640.0 * numPointsAveraged)
 
 	curr_velocity.linear.x = (depthAverage - dee)/2
-	curr_velocity.angular.z = -(dirAverage - 0.5)*2.0
+	curr_velocity.angular.z = -(dirAverage - 0.5)*2
 
 def selfie(image):
 	path = "./pictures"
@@ -265,7 +265,8 @@ def main():
 	global curr_velocity, blobData, blobTime, isBlobReady, isColorImageReady, blobCopy, timeCopy
 	global nowFollowBlob, nowTakeSelfie, followPoint, depthAverage, dirAverage
 	global win
-	win = Graphwin()
+	count = 0
+	win = GraphWin('title', 500, 500)
 	twist_init()
 	data_init()
 	rospy.init_node('depth_stalker', anonymous = True) # Initialize this node
@@ -281,11 +282,11 @@ def main():
 	while not rospy.is_shutdown():
 		try:
 			color_image = bridge.imgmsg_to_cv2(colorImage, "bgr8")
-			scanMid(
 		except CvBridgeError, e:
 			print e
-
-		scanMid()
+		
+		#if count % 100 == 0:
+		#	scanMid()
 		
 		#check blobs
 		while not isBlobReady: # XXX: Fast loop. Slow it down?
@@ -296,8 +297,8 @@ def main():
 		handleBlobs()
 		isBlobReady = False # Finished processing this batch
 		handleMovement()
-		handleFront()
-		if random.random() > 0.9:
+		count = count + 1
+		if count % 2 == 0:
 			sys.stderr.write("nFB:" + str(nowFollowBlob)[0] +
 					 " fP:" + str(followPoint) +
 					 " c_vX:" + str(curr_velocity.linear.x) +
