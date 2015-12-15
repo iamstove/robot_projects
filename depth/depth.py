@@ -92,7 +92,7 @@ def scanMid():
 	'''scans across the center of an image, and returns a list of depths'''
 	if isDepthReady:
 		depthCopy = depthData
-		midstep = 10
+		midstep = 40
 		horzArr = []
 		for pixel in range(0, 640, midstep): #build an array of values across the center of the screen (midstep px apart)
 			offset = (240 * depthData.step) + (pixel * 4)
@@ -159,7 +159,7 @@ def parseBlobs(data):
 	has_new_blobinfo = True
 
 def handleMiddle(middleList):
-	global spacePoints
+	global spacePoints, del_x
 	mapList = []
 	for point in middleList:
 		if not math.isnan(point[1]):
@@ -285,8 +285,8 @@ def main():
 		except CvBridgeError, e:
 			print e
 		
-		#if count % 100 == 0:
-		#	scanMid()
+		if count % 64 == 0:
+			scanMid()
 		
 		#check blobs
 		while not isBlobReady: # XXX: Fast loop. Slow it down?
@@ -298,7 +298,7 @@ def main():
 		isBlobReady = False # Finished processing this batch
 		handleMovement()
 		count = count + 1
-		if count % 2 == 0:
+		if count % 8 == 0:
 			sys.stderr.write("nFB:" + str(nowFollowBlob)[0] +
 					 " fP:" + str(followPoint) +
 					 " c_vX:" + str(curr_velocity.linear.x) +
