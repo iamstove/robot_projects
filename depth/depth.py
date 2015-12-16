@@ -92,7 +92,7 @@ def scanMid():
 	'''scans across the center of an image, and returns a list of depths'''
 	if isDepthReady:
 		depthCopy = depthData
-		midstep = 40
+		midstep = 80
 		horzArr = []
 		for pixel in range(0, 640, midstep): #build an array of values across the center of the screen (midstep px apart)
 			offset = (240 * depthData.step) + (pixel * 4)
@@ -159,7 +159,7 @@ def parseBlobs(data):
 	has_new_blobinfo = True
 
 def handleMiddle(middleList):
-	global spacePoints, del_x
+	global spacePoints, del_x, del_r
 	mapList = []
 	for point in middleList:
 		if not math.isnan(point[1]):
@@ -174,7 +174,7 @@ def handleMiddle(middleList):
 def mapPoints(mapList):
 	global win
 	for point in mapList:
-		win.plot(int(point[0]*100), int(point[1]*100))
+		win.plot(int(point[0]*5+250), int(point[1]*5+250))
 
 def handleBlobs(): #this still needs to check to see if the picture card exists, if it does then we just call the selfie funtion
 	global curr_blobweights, nowFollowBlob, followPoint
@@ -242,8 +242,10 @@ def handleMovement(): 	# If it exists, this function collects Kinect's distance 
 		depthAverage += (pastData[-1][1] - pastData[-1 - numPointsAveraged][1]) / float(numPointsAveraged)
 		dirAverage += (pastData[-1][2][0] - pastData[-1 - numPointsAveraged][2][0]) / (640.0 * numPointsAveraged)
 
-	curr_velocity.linear.x = (depthAverage - dee)/2
+	curr_velocity.linear.x = (depthAverage - dee)/4
 	curr_velocity.angular.z = -(dirAverage - 0.5)*2
+	#if abs(curr_velocity.linear.x) > 0.1: 
+	#	curr_velocity.angular.z = 0
 
 def selfie(image):
 	path = "./pictures"
@@ -285,7 +287,7 @@ def main():
 		except CvBridgeError, e:
 			print e
 		
-		if count % 64 == 0:
+		if count % 8 == 0:
 			scanMid()
 		
 		#check blobs
@@ -299,14 +301,15 @@ def main():
 		handleMovement()
 		count = count + 1
 		if count % 8 == 0:
-			sys.stderr.write("nFB:" + str(nowFollowBlob)[0] +
+			''' sys.stderr.write("nFB:" + str(nowFollowBlob)[0] +
 					 " fP:" + str(followPoint) +
 					 " c_vX:" + str(curr_velocity.linear.x) +
 					 " c_vZ:" + str(curr_velocity.angular.z) +
 					 " hOb:" + str(hasObstacle) +
 					 " dpAv:" + str(depthAverage) +
 					 " drAv:" + str(dirAverage) +
-					 "\n")
+					 "\n")'''
+			sys.stderr.write("x:" + str(del_x[0]) + " y:" + str(del_x[1]) + "\n")
 		if nowFollowBlob and not nowTakeSelfie:
 			pub.publish(curr_velocity)
 			#move forward, keeping the blob centered, adjusting speed with distance
