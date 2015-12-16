@@ -92,13 +92,18 @@ def scanMid():
 	'''scans across the center of an image, and returns a list of depths'''
 	if isDepthReady:
 		depthCopy = depthData
-		midstep = 80
+		midstep = 40
 		horzArr = []
 		for pixel in range(0, 640, midstep): #build an array of values across the center of the screen (midstep px apart)
 			offset = (240 * depthData.step) + (pixel * 4)
 			(val,) = unpack('f', depthCopy.data[offset] + depthCopy.data[offset+1] + depthCopy.data[offset+2] + depthCopy.data[offset+3])
 			horzArr.append((pixel,val))
 
+		'''for pixel in range(480, 641, midstep):
+			offset = (240 * depthData.step) + (pixel * 4)
+			(val,) = unpack('f', depthCopy.data[offset] + depthCopy.data[offset+1] + depthCopy.data[offset+2] + depthCopy.data[offset+3])
+			horzArr.append((pixel,val))'''
+	
 		handleMiddle(horzArr)
 	else:
 		pass
@@ -166,15 +171,17 @@ def handleMiddle(middleList):
 			theta = math.atan((320.0 - point[0]) / 320.0 * math.tan(0.5))
 			thetap = theta + del_r
 			dvec_x = (math.cos(thetap) * point[1], math.sin(thetap) * point[1])
-			vec_x = (dvec_x[0] + del_x[0], dvec_x[1] + del_x[1])
+			vec_x = Point(int((dvec_x[0] + del_x[0])*7), int((dvec_x[1] + del_x[1])*7))
 			mapList.append(vec_x)
-			mapPoints(mapList)
+			# mapPoints(mapList)
 	spacePoints += mapList
 
-def mapPoints(mapList):
-	global win
-	for point in mapList:
-		win.plot(int(point[0]*5+250), int(point[1]*5+250))
+def mapPoints():
+	global win, spacePoints
+	for point in spacePoints:
+		point.draw(win)
+	
+	spacePoints = []
 
 def handleBlobs(): #this still needs to check to see if the picture card exists, if it does then we just call the selfie funtion
 	global curr_blobweights, nowFollowBlob, followPoint
@@ -195,7 +202,6 @@ def handleBlobs(): #this still needs to check to see if the picture card exists,
 			#we have a camera card?
 			nowTakeSelfie = True
 
-
 def handleMovement(): 	# If it exists, this function collects Kinect's distance at followPoint and handles
 			# the twist response and verbal response to seeing different environmental factors,
 			# recording followPoint->Kinect data in pastData and looking at the kinect depth field
@@ -207,7 +213,7 @@ def handleMovement(): 	# If it exists, this function collects Kinect's distance 
 	hasObstacle = scanFront() > 512
 
 	numPointsAveraged = 30
-	dee = 1.3
+	dee = 1.0
 
 	if nowFollowBlob and not hasObstacle:
 		# Get the depth of the followPoint
@@ -268,7 +274,7 @@ def main():
 	global nowFollowBlob, nowTakeSelfie, followPoint, depthAverage, dirAverage
 	global win
 	count = 0
-	win = GraphWin('title', 500, 500)
+	win = GraphWin('title', 500, 500, autoflush=False)
 	twist_init()
 	data_init()
 	rospy.init_node('depth_stalker', anonymous = True) # Initialize this node
@@ -287,8 +293,6 @@ def main():
 		except CvBridgeError, e:
 			print e
 		
-		if count % 8 == 0:
-			scanMid()
 		
 		#check blobs
 		while not isBlobReady: # XXX: Fast loop. Slow it down?
@@ -309,8 +313,8 @@ def main():
 					 " dpAv:" + str(depthAverage) +
 					 " drAv:" + str(dirAverage) +
 					 "\n")'''
-			sys.stderr.write("x:" + str(del_x[0]) + " y:" + str(del_x[1]) + "\n")
-		if nowFollowBlob and not nowTakeSelfie:
+			# sys.stderr.write("x:" + str(del_x[0]) + " y:" + str(del_x[1]) + "\n")
+		if not nowTakeSelfie:
 			pub.publish(curr_velocity)
 			#move forward, keeping the blob centered, adjusting speed with distance
 			#check for obstacles
@@ -320,7 +324,12 @@ def main():
 			twist_init()
 			pub.publish(curr_velocity)
 			selfie(color_image)
-
+		if abs(curr_velocity.linear.x) + abs(curr_velocity.angular.z) < 0.01 and count % 512 == 0:
+			win.setCoords(-250, -250, 250, 250)
+			mapPoints()
+			win.update()
+		elif count % 32 == 0:
+			scanMid()
 
 
 
